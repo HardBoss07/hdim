@@ -9,8 +9,8 @@ resolver = "2"
 [workspace.dependencies]
 # Graphics & Math
 image = "0.25"
-crossterm = "0.27"
-ratatui = "0.26"
+crossterm = "0.29"
+ratatui = "0.30"
 palette = "0.7.6"
 
 # Error Handling & Utils

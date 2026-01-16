@@ -6,7 +6,7 @@ edition = "2024"
 [dependencies]
 hdim-core = { path = "../hdim-core" }
 hdim-render = { path = "../hdim-render" }
-ratatui = { workspace = true }
+ratatui.workspace = true
 crossterm = { workspace = true }
 anyhow = { workspace = true }
 image = { workspace = true }
