@@ -1,10 +1,10 @@
 [package]
-name = "hdiv-render"
+name = "hdim-render"
 version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-hdiv-core = { path = "../hdiv-core" }
+hdim-core = { path = "../hdim-core" }
 image = { workspace = true }
 crossterm = { workspace = true }
 anyhow = { workspace = true }

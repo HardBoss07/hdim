@@ -1,8 +1,8 @@
 [workspace]
 members = [
-    "crates/hdiv-core",
-    "crates/hdiv-render",
-    "crates/hdiv-tui",
+    "crates/hdim-core",
+    "crates/hdim-render",
+    "crates/hdim-tui",
 ]
 resolver = "2"
 

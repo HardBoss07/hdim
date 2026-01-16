@@ -467,7 +467,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "hdiv-core"
+name = "hdim-core"
 version = "0.1.0"
 dependencies = [
  "anyhow",
@@ -476,24 +476,24 @@ dependencies = [
 ]
 
 [[package]]
-name = "hdiv-render"
+name = "hdim-render"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "crossterm",
- "hdiv-core",
+ "hdim-core",
  "image",
  "insta",
 ]
 
 [[package]]
-name = "hdiv-tui"
+name = "hdim-tui"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "crossterm",
- "hdiv-core",
- "hdiv-render",
+ "hdim-core",
+ "hdim-render",
  "image",
  "ratatui",
 ]

@@ -1,4 +1,4 @@
-use hdiv_render::render_half_block;
+use hdim_render::render_half_block;
 use image::{DynamicImage, RgbaImage, Rgba};
 
 #[test]

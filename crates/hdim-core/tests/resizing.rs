@@ -1,4 +1,4 @@
-use hdiv_core::{calculate_resize, Size};
+use hdim_core::{calculate_resize, Size};
 use image::{DynamicImage, RgbaImage};
 
 fn make_dummy_image(w: u32, h: u32) -> DynamicImage {

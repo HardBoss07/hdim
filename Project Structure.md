@@ -1,17 +1,17 @@
 # Project Structure
 
 ```
-hdiv/
+hdim/
 ├── crates/
-│   ├── hdiv-core/
+│   ├── hdim-core/
 │   │   ├── src/
 │   │   │   └── lib.rs
 │   │   └── Cargo.toml
-│   ├── hdiv-render/
+│   ├── hdim-render/
 │   │   ├── src/
 │   │   │   └── lib.rs
 │   │   └── Cargo.toml
-│   └── hdiv-tui/
+│   └── hdim-tui/
 │       ├── src/
 │       │   └── main.rs
 │       └── Cargo.toml
