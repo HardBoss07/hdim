@@ -9,6 +9,7 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph},
 };
 use std::path::PathBuf;
+use std::time::{Duration, Instant};
 
 /// Application state to track the processed image and current scroll position
 struct App {
@@ -20,6 +21,10 @@ struct App {
     scroll: (u16, u16),
     /// Zoom factor (maps to Renderer's area_size)
     zoom_factor: u32,
+    /// Track the last time an input was processed to prevent double-triggering
+    last_input_time: Instant,
+    /// Minimum time between processing consecutive inputs (e.g., 50ms)
+    input_delay: Duration,
 }
 
 impl App {
@@ -31,6 +36,8 @@ impl App {
             image_text: text,
             scroll: (0, 0),
             zoom_factor,
+            last_input_time: Instant::now(),
+            input_delay: Duration::from_millis(75), // Reduced to 50ms for snappier scrolling
         })
     }
 
@@ -85,39 +92,63 @@ fn run(mut terminal: DefaultTerminal, mut app: App) -> Result<()> {
         // Rendering
         terminal.draw(|frame| render(frame, &app))?;
 
-        // Input handling
-        if let Event::Key(key) = event::read()? {
-            match key.code {
-                // Exit keys
-                KeyCode::Esc | KeyCode::Char('q') => {
-                    break;
+        // 1. Check if any events are waiting in the OS buffer
+        if event::poll(Duration::from_millis(16))? {
+            // 2. Rate Limiting: Only process if the input_delay has passed
+            if app.last_input_time.elapsed() >= app.input_delay {
+                let mut last_key_event = None;
+
+                // 3. QUEUE DRAINING: Read all pending events and only keep the latest Key event
+                // This stops the "sliding" effect where inputs play back like a recording
+                while event::poll(Duration::from_millis(0))? {
+                    if let Event::Key(key) = event::read()? {
+                        last_key_event = Some(key);
+                    }
                 }
 
-                // Vertical Scrolling (Up/Down)
-                KeyCode::Up => {
-                    app.scroll.0 = app.scroll.0.saturating_sub(1);
-                }
-                KeyCode::Down => {
-                    app.scroll.0 = app.scroll.0.saturating_add(1);
-                }
+                // 4. Process the most recent event found
+                if let Some(key) = last_key_event {
+                    app.last_input_time = Instant::now();
 
-                // Horizontal Scrolling (Left/Right)
-                KeyCode::Left => {
-                    app.scroll.1 = app.scroll.1.saturating_sub(1);
-                }
-                KeyCode::Right => {
-                    app.scroll.1 = app.scroll.1.saturating_add(1);
-                }
+                    match key.code {
+                        // Exit keys
+                        KeyCode::Esc | KeyCode::Char('q') => {
+                            break;
+                        }
 
-                // Zooming (PageUp/PageDown)
-                KeyCode::PageUp => {
-                    app.update_zoom(1)?;
-                }
-                KeyCode::PageDown => {
-                    app.update_zoom(-1)?;
-                }
+                        // Vertical Scrolling (Up/Down)
+                        KeyCode::Up => {
+                            app.scroll.0 = app.scroll.0.saturating_sub(1);
+                        }
+                        KeyCode::Down => {
+                            app.scroll.0 = app.scroll.0.saturating_add(1);
+                        }
 
-                _ => {}
+                        // Horizontal Scrolling (Left/Right)
+                        KeyCode::Left => {
+                            app.scroll.1 = app.scroll.1.saturating_sub(1);
+                        }
+                        KeyCode::Right => {
+                            app.scroll.1 = app.scroll.1.saturating_add(1);
+                        }
+
+                        // Zooming (PageUp/PageDown)
+                        KeyCode::PageUp => {
+                            app.update_zoom(1)?;
+                        }
+                        KeyCode::PageDown => {
+                            app.update_zoom(-1)?;
+                        }
+
+                        _ => {}
+                    }
+                }
+            } else {
+                // If we aren't ready to process yet, clear the buffer anyway
+                // so old events don't accumulate
+                while event::poll(Duration::from_millis(0))? {
+                    let _ = event::read();
+                }
             }
         }
     }
