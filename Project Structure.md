@@ -11,7 +11,9 @@ hdim/
 │   │   └── Cargo.toml
 │   ├── hdim-render/
 │   │   ├── src/
-│   │   │   └── lib.rs
+│   │   │   ├── lib.rs
+│   │   │   ├── pixel.rs
+│   │   │   └── view.rs
 │   │   ├── tests/
 │   │   │   ├── images/
 │   │   │   │   ├── 4k.jpg
@@ -29,7 +31,10 @@ hdim/
 │   │   └── Cargo.toml
 │   └── hdim-tui/
 │       ├── src/
-│       │   └── main.rs
+│       │   ├── app.rs
+│       │   ├── events.rs
+│       │   ├── main.rs
+│       │   └── ui.rs
 │       └── Cargo.toml
 ├── Cargo.lock
 ├── Cargo.toml
