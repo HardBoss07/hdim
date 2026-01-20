@@ -1,7 +1,7 @@
 use ansi_to_tui::IntoText;
 use color_eyre::eyre::{Ok, Result};
 use crossterm::event::{self, Event, KeyCode, KeyEventKind};
-use hdim_render::View; // Use the new View struct and render function
+use hdim_render::view::View; // Use the new View struct and render function
 use image::{DynamicImage, GenericImageView};
 use ratatui::{
     DefaultTerminal, Frame,

@@ -1,62 +1,12 @@
+pub mod pixel;
+pub mod view;
+
 use anyhow::Result;
-use image::{DynamicImage, GenericImageView};
+use image::DynamicImage;
 use std::fmt::Write;
 
-/// Defines the mapping between a rectangular area of the source image
-/// and the target rendering area in the terminal.
-pub struct View {
-    /// The top-left X coordinate of the view on the source image (in pixels).
-    pub source_x: u32,
-    /// The top-left Y coordinate of the view on the source image (in pixels).
-    pub source_y: u32,
-    /// The width of the view on the source image (in pixels).
-    pub source_width: u32,
-    /// The height of the view on the source image (in pixels).
-    pub source_height: u32,
-    /// The width of the target render area (in terminal columns).
-    pub target_width: u32,
-    /// The height of the target render area (in terminal rows).
-    pub target_height: u32,
-}
-
-/// Calculates the average RGB color for a specific rectangular area of the image.
-fn get_average_rgb(
-    image: &DynamicImage,
-    start_x: u32,
-    start_y: u32,
-    width: u32,
-    height: u32,
-) -> [u8; 3] {
-    let (image_width, image_height) = image.dimensions();
-    let mut r_total: u64 = 0;
-    let mut g_total: u64 = 0;
-    let mut b_total: u64 = 0;
-    let mut count: u64 = 0;
-
-    // Define the boundaries of the area to iterate over, clamping to image dimensions
-    let end_y = (start_y + height).min(image_height);
-    let end_x = (start_x + width).min(image_width);
-
-    for py in start_y..end_y {
-        for px in start_x..end_x {
-            let pixel = image.get_pixel(px, py);
-            r_total += pixel[0] as u64;
-            g_total += pixel[1] as u64;
-            b_total += pixel[2] as u64;
-            count += 1;
-        }
-    }
-
-    if count == 0 {
-        return [0, 0, 0];
-    }
-
-    [
-        (r_total / count) as u8,
-        (g_total / count) as u8,
-        (b_total / count) as u8,
-    ]
-}
+use self::pixel::get_average_rgb;
+pub use self::view::View;
 
 /// Renders a portion of an image to a string using half-block characters.
 ///
