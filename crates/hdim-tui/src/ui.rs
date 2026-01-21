@@ -2,7 +2,6 @@ use crate::app::App;
 use ansi_to_tui::IntoText;
 use color_eyre::eyre::Result;
 use hdim_render::view::View;
-use image::GenericImageView;
 use ratatui::{
     Frame,
     prelude::*,
@@ -31,7 +30,8 @@ pub fn render(frame: &mut Frame, app: &mut App) {
     let main_area = middle_chunks[1];
 
     // DYNAMICALLY RENDER THE VIEWPORT
-    let (image_width, image_height) = app.raw_image.dimensions();
+    let image_width = app.hdim_image.width;
+    let image_height = app.hdim_image.height;
 
     // The number of source pixels to cover is based on the TUI area size and zoom level.
     // Each character cell is two "pixels" high.
@@ -57,7 +57,7 @@ pub fn render(frame: &mut Frame, app: &mut App) {
         target_height: main_area.height as u32,
     };
 
-    let image_text = match hdim_render::render(&app.raw_image, &view) {
+    let image_text = match hdim_render::render(&app.hdim_image.data, &view) {
         Result::Ok(ansi_string) => ansi_string.into_text().unwrap_or_default(),
         Err(_) => "Error rendering image".into_text().unwrap(),
     };

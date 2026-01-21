@@ -1,11 +1,11 @@
 use color_eyre::eyre::{Ok, Result};
-use image::{DynamicImage, GenericImageView};
+use hdim_core::HdimImage;
 use std::time::{Duration, Instant};
 
 /// Application state
 pub struct App {
-    /// We store the raw DynamicImage so we can re-render it
-    pub raw_image: DynamicImage,
+    /// We store the wrapper HdimImage so we can re-render it and access metadata
+    pub hdim_image: HdimImage,
     /// The top-left corner of the viewport on the source image (x, y) in pixels.
     pub source_pos: (u32, u32),
     /// Zoom level. Represents `source_pixels / terminal_characters`.
@@ -18,9 +18,9 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(image: DynamicImage, initial_zoom: f32) -> Result<Self> {
+    pub fn new(hdim_image: HdimImage, initial_zoom: f32) -> Result<Self> {
         Ok(Self {
-            raw_image: image,
+            hdim_image,
             source_pos: (0, 0),
             zoom: initial_zoom,
             last_input_time: Instant::now(),
@@ -47,7 +47,8 @@ impl App {
 
     // Prevents the viewport from going out of bounds of the source image.
     pub fn clamp_source_pos(&mut self) {
-        let (image_width, image_height) = self.raw_image.dimensions();
+        let image_width = self.hdim_image.width;
+        let image_height = self.hdim_image.height;
         if self.source_pos.0 > image_width {
             self.source_pos.0 = image_width;
         }
