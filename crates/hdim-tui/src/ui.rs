@@ -1,11 +1,10 @@
-use crate::app::App;
+use crate::app::{App, AppMode, Tool};
 use ansi_to_tui::IntoText;
 use color_eyre::eyre::Result;
 use hdim_render::view::View;
 use ratatui::{
-    Frame,
     prelude::*,
-    widgets::{Block, Borders, Paragraph},
+    widgets::{Block, Borders, List, ListItem, Paragraph},
 };
 
 pub fn render(frame: &mut Frame, app: &mut App) {
@@ -74,23 +73,64 @@ pub fn render(frame: &mut Frame, app: &mut App) {
             .block(Block::default().borders(Borders::ALL).title("Top")),
         vertical_chunks[0],
     );
-    frame.render_widget(
-        Paragraph::new(" Left Banner Content ")
-            .block(Block::default().borders(Borders::ALL).title("Left")),
-        middle_chunks[0],
-    );
+
+    let tools = List::new([ListItem::new("1. Crop")])
+        .block(Block::default().borders(Borders::ALL).title("Tools"));
+    frame.render_widget(tools, middle_chunks[0]);
+
     frame.render_widget(
         Paragraph::new(image_text).block(Block::default().borders(Borders::ALL).title(main_title)),
         main_area,
     );
+
+    let right_banner_content = if let Some(Tool::Crop) = app.selected_tool {
+        let crop_options = ["Left", "Right", "Top", "Bottom", "Crop from viewport"];
+        let crop_items: Vec<ListItem> = crop_options
+            .iter()
+            .enumerate()
+            .map(|(i, &option)| {
+                let mut text = if i < 4 {
+                    let value = match i {
+                        0 => app.crop_state.left,
+                        1 => app.crop_state.right,
+                        2 => app.crop_state.top,
+                        3 => app.crop_state.bottom,
+                        _ => unreachable!(),
+                    };
+                    format!("{}: {}", option, value)
+                } else {
+                    option.to_string()
+                };
+
+                if app.mode == AppMode::EditingCropValue && app.selected_crop_option_index == i {
+                    text.push_str(&format!(" {}", app.crop_input));
+                }
+
+                let mut item = ListItem::new(text);
+                if app.selected_crop_option_index == i {
+                    item = item.style(Style::default().add_modifier(Modifier::REVERSED));
+                }
+                item
+            })
+            .collect();
+
+        let crop_list = List::new(crop_items)
+            .block(Block::default().borders(Borders::ALL).title("Crop Options"));
+        crop_list
+    } else {
+        List::new(vec![ListItem::new(" Right Banner Content ")])
+            .block(Block::default().borders(Borders::ALL).title("Right"))
+    };
+    frame.render_widget(right_banner_content, middle_chunks[2]);
+
+    let bottom_text = if let Some(Tool::Crop) = app.selected_tool {
+        "Tab to switch | Enter to edit/select | Esc to deselect"
+    } else {
+        " Arrows to Pan | PgUp/PgDn to Zoom | 'q' to Quit "
+    };
+
     frame.render_widget(
-        Paragraph::new(" Right Banner Content ")
-            .block(Block::default().borders(Borders::ALL).title("Right")),
-        middle_chunks[2],
-    );
-    frame.render_widget(
-        Paragraph::new(" Arrows to Pan | PgUp/PgDn to Zoom | 'q' to Quit ")
-            .block(Block::default().borders(Borders::ALL).title("Bottom")),
+        Paragraph::new(bottom_text).block(Block::default().borders(Borders::ALL).title("Bottom")),
         vertical_chunks[2],
     );
 }

@@ -2,6 +2,42 @@ use color_eyre::eyre::{Ok, Result};
 use hdim_core::HdimImage;
 use std::time::{Duration, Instant};
 
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Tool {
+    Crop,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum ActiveWidget {
+    Main,
+    Tools,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum AppMode {
+    Normal,
+    EditingCropValue,
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct CropState {
+    pub left: u32,
+    pub right: u32,
+    pub top: u32,
+    pub bottom: u32,
+}
+
+impl Default for CropState {
+    fn default() -> Self {
+        Self {
+            left: 0,
+            right: 0,
+            top: 0,
+            bottom: 0,
+        }
+    }
+}
+
 /// Application state
 pub struct App {
     /// We store the wrapper HdimImage so we can re-render it and access metadata
@@ -15,6 +51,18 @@ pub struct App {
     pub last_input_time: Instant,
     /// Minimum time between processing consecutive inputs
     pub input_delay: Duration,
+    // The currently selected tool
+    pub selected_tool: Option<Tool>,
+    // The currently active widget
+    pub active_widget: ActiveWidget,
+    // The state of the crop tool
+    pub crop_state: CropState,
+    // The current application mode
+    pub mode: AppMode,
+    // The index of the selected crop option
+    pub selected_crop_option_index: usize,
+    // The input string for crop values
+    pub crop_input: String,
 }
 
 impl App {
@@ -25,6 +73,12 @@ impl App {
             zoom: initial_zoom,
             last_input_time: Instant::now(),
             input_delay: Duration::from_millis(50), // Reduced for snappier input
+            selected_tool: None,
+            active_widget: ActiveWidget::Main,
+            crop_state: CropState::default(),
+            mode: AppMode::Normal,
+            selected_crop_option_index: 0,
+            crop_input: String::new(),
         })
     }
 
