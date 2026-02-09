@@ -1,5 +1,5 @@
 #![cfg(feature = "exif")]
-use super::util::{get_rational, get_rational_vec};
+use super::util::{get_rational_from_exif, get_rational_vec_from_exif};
 use exif::{Exif, In, Tag};
 
 #[derive(Clone, Debug)]
@@ -12,14 +12,14 @@ pub struct GpsExif {
 
 pub fn get_gps_exif(exif: &Exif) -> Option<GpsExif> {
     Some(GpsExif {
-        latitude: get_rational(exif.get_field(Tag::GPSLatitude, In::PRIMARY)),
-        longitude: get_rational(exif.get_field(Tag::GPSLongitude, In::PRIMARY)),
-        altitude: get_rational(exif.get_field(Tag::GPSAltitude, In::PRIMARY)),
-        timestamp: get_rational_vec(exif.get_field(Tag::GPSTimeStamp, In::PRIMARY)).map(|v| {
+        latitude: get_rational_from_exif(exif, Tag::GPSLatitude, In::PRIMARY),
+        longitude: get_rational_from_exif(exif, Tag::GPSLongitude, In::PRIMARY),
+        altitude: get_rational_from_exif(exif, Tag::GPSAltitude, In::PRIMARY),
+        timestamp: get_rational_vec_from_exif(exif, Tag::GPSTimeStamp, In::PRIMARY).map(|values| {
             (
-                v.get(0).map_or(0, |&f| f as u8),
-                v.get(1).map_or(0, |&f| f as u8),
-                v.get(2).map_or(0, |&f| f as u8),
+                values.get(0).map_or(0, |&second| second as u8),
+                values.get(1).map_or(0, |&second| second as u8),
+                values.get(2).map_or(0, |&second| second as u8),
             )
         }),
     })

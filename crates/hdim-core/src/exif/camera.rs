@@ -1,5 +1,5 @@
 #![cfg(feature = "exif")]
-use super::util::get_ascii;
+use super::util::get_ascii_from_exif;
 use exif::{Exif, In, Tag};
 
 #[derive(Clone, Debug)]
@@ -11,8 +11,8 @@ pub struct CameraExif {
 
 pub fn get_camera_exif(exif: &Exif) -> Option<CameraExif> {
     Some(CameraExif {
-        make: get_ascii(exif.get_field(Tag::Make, In::PRIMARY)),
-        model: get_ascii(exif.get_field(Tag::Model, In::PRIMARY)),
-        software: get_ascii(exif.get_field(Tag::Software, In::PRIMARY)),
+        make: get_ascii_from_exif(exif, Tag::Make, In::PRIMARY),
+        model: get_ascii_from_exif(exif, Tag::Model, In::PRIMARY),
+        software: get_ascii_from_exif(exif, Tag::Software, In::PRIMARY),
     })
 }

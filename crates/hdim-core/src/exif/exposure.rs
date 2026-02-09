@@ -1,5 +1,5 @@
 #![cfg(feature = "exif")]
-use super::util::get_rational;
+use super::util::{get_rational_from_exif, get_u16_from_exif, get_u32_from_exif};
 use exif::{Exif, In, Tag};
 
 #[derive(Clone, Debug)]
@@ -16,21 +16,13 @@ pub struct ExposureExif {
 
 pub fn get_exposure_exif(exif: &Exif) -> Option<ExposureExif> {
     Some(ExposureExif {
-        exposure_time: get_rational(exif.get_field(Tag::ExposureTime, In::PRIMARY)),
-        f_number: get_rational(exif.get_field(Tag::FNumber, In::PRIMARY)),
-        iso: exif
-            .get_field(Tag::ISOSpeed, In::PRIMARY)
-            .and_then(|f| f.value.get_uint(0).map(|v| v as u32)),
-        exposure_bias: get_rational(exif.get_field(Tag::ExposureBiasValue, In::PRIMARY)),
-        metering_mode: exif
-            .get_field(Tag::MeteringMode, In::PRIMARY)
-            .and_then(|f| f.value.get_uint(0).map(|v| v as u16)),
-        flash: exif
-            .get_field(Tag::Flash, In::PRIMARY)
-            .and_then(|f| f.value.get_uint(0).map(|v| v as u16)),
-        focal_length: get_rational(exif.get_field(Tag::FocalLength, In::PRIMARY)),
-        white_balance: exif
-            .get_field(Tag::WhiteBalance, In::PRIMARY)
-            .and_then(|f| f.value.get_uint(0).map(|v| v as u16)),
+        exposure_time: get_rational_from_exif(exif, Tag::ExposureTime, In::PRIMARY),
+        f_number: get_rational_from_exif(exif, Tag::FNumber, In::PRIMARY),
+        iso: get_u32_from_exif(exif, Tag::ISOSpeed, In::PRIMARY),
+        exposure_bias: get_rational_from_exif(exif, Tag::ExposureBiasValue, In::PRIMARY),
+        metering_mode: get_u16_from_exif(exif, Tag::MeteringMode, In::PRIMARY),
+        flash: get_u16_from_exif(exif, Tag::Flash, In::PRIMARY),
+        focal_length: get_rational_from_exif(exif, Tag::FocalLength, In::PRIMARY),
+        white_balance: get_u16_from_exif(exif, Tag::WhiteBalance, In::PRIMARY),
     })
 }

@@ -1,5 +1,5 @@
 #![cfg(feature = "exif")]
-use super::util::get_rational;
+use super::util::{get_rational_from_exif, get_u16_from_exif, get_u32_from_exif};
 use exif::{Exif, In, Tag};
 
 #[derive(Clone, Debug)]
@@ -13,16 +13,10 @@ pub struct ImageExif {
 
 pub fn get_image_exif(exif: &Exif) -> Option<ImageExif> {
     Some(ImageExif {
-        width: exif
-            .get_field(Tag::ImageWidth, In::PRIMARY)
-            .and_then(|f| f.value.get_uint(0)),
-        height: exif
-            .get_field(Tag::ImageLength, In::PRIMARY)
-            .and_then(|f| f.value.get_uint(0)),
-        resolution_unit: exif
-            .get_field(Tag::ResolutionUnit, In::PRIMARY)
-            .and_then(|f| f.value.get_uint(0).map(|v| v as u16)),
-        x_resolution: get_rational(exif.get_field(Tag::XResolution, In::PRIMARY)),
-        y_resolution: get_rational(exif.get_field(Tag::YResolution, In::PRIMARY)),
+        width: get_u32_from_exif(exif, Tag::ImageWidth, In::PRIMARY),
+        height: get_u32_from_exif(exif, Tag::ImageLength, In::PRIMARY),
+        resolution_unit: get_u16_from_exif(exif, Tag::ResolutionUnit, In::PRIMARY),
+        x_resolution: get_rational_from_exif(exif, Tag::XResolution, In::PRIMARY),
+        y_resolution: get_rational_from_exif(exif, Tag::YResolution, In::PRIMARY),
     })
 }
