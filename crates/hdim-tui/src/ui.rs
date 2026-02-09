@@ -1,12 +1,13 @@
 use crate::app::{App, AppMode};
 use crate::components::crop::render_crop_options;
+use crate::components::save_as::SaveAs;
 use ansi_to_tui::IntoText;
 use color_eyre::eyre::Result;
 use hdim_core::state::Tool;
 use hdim_render::view::View;
 use ratatui::{
     prelude::*,
-    widgets::{Block, Borders, List, ListItem, Paragraph},
+    widgets::{Block, Borders, Clear, List, ListItem, Paragraph},
 };
 
 pub fn render(frame: &mut Frame, app: &mut App) {
@@ -83,8 +84,12 @@ pub fn render(frame: &mut Frame, app: &mut App) {
     );
 
     // Render Left Toolbar
-    let tools = List::new([ListItem::new("1. Crop"), ListItem::new("2. Exif")])
-        .block(Block::default().borders(Borders::ALL).title("Tools"));
+    let tools = List::new([
+        ListItem::new("1. Crop"),
+        ListItem::new("2. Exif"),
+        ListItem::new("3. Save As"),
+    ])
+    .block(Block::default().borders(Borders::ALL).title("Tools"));
     frame.render_widget(tools, left_toolbar_area);
 
     // Render Main Content
@@ -112,7 +117,8 @@ pub fn render(frame: &mut Frame, app: &mut App) {
                     );
                 }
             }
-            AppMode::Normal | AppMode::EditingCropValue => {
+            AppMode::Normal | AppMode::EditingCropValue | AppMode::Saving => {
+                // Include AppMode::Saving here for right toolbar
                 if let Some(Tool::Crop) = app.selected_tool {
                     frame.render_widget(render_crop_options(app), right_toolbar_area);
                 } else {
@@ -135,6 +141,9 @@ pub fn render(frame: &mut Frame, app: &mut App) {
             "Tab to switch | Enter to edit/select | Esc to deselect"
         }
         AppMode::ExifView => "Up/Down to scroll | Esc to deselect",
+        AppMode::Saving => {
+            "Up/Down to select format | Left/Right to move cursor | Enter to Save | Esc to Cancel"
+        }
         _ => " Arrows to Pan | PgUp/PgDn to Zoom | 'q' to Quit ",
     };
 
@@ -142,4 +151,21 @@ pub fn render(frame: &mut Frame, app: &mut App) {
         Paragraph::new(bottom_text).block(Block::default().borders(Borders::ALL).title("Bottom")),
         bottom_nav_area,
     );
+
+    if let AppMode::Saving = app.mode {
+        render_save_as_popup(frame, &app.save_as);
+    }
+}
+
+fn render_save_as_popup(frame: &mut Frame, save_as_state: &SaveAs) {
+    let size = frame.area();
+    let popup_area = Rect::new(
+        size.width.saturating_sub(60) / 2,
+        size.height.saturating_sub(10) / 2,
+        60,
+        10,
+    );
+
+    frame.render_widget(Clear, popup_area); // This clears the background
+    frame.render_widget(save_as_state, popup_area);
 }

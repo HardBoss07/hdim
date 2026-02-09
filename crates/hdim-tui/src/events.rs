@@ -3,6 +3,7 @@ use crate::components::crop::handle_crop_events;
 use color_eyre::eyre::Result;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
 use hdim_core::state::Tool;
+use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
 const PAN_AMOUNT_CHARACTERS: u32 = 10; // Number of characters to pan per key press
@@ -85,6 +86,52 @@ fn handle_key_press(app: &mut App, key: KeyEvent) {
             }
             _ => {}
         },
+        AppMode::Saving => {
+            match key.code {
+                KeyCode::Up => app.save_as.on_up(),
+                KeyCode::Down => app.save_as.on_down(),
+                KeyCode::Left => app.save_as.on_left(),
+                KeyCode::Right => app.save_as.on_right(),
+                KeyCode::Backspace => app.save_as.on_backspace(),
+                KeyCode::Delete => app.save_as.on_delete(),
+                KeyCode::Char(c) => app.save_as.on_char(c),
+                KeyCode::Esc => {
+                    app.mode = AppMode::Normal;
+                }
+                KeyCode::Enter => {
+                    let file_name = app.save_as.file_name();
+                    let format = app.save_as.selected_format();
+                    let output_format = format.to_image_format(); // Changed to to_image_format
+
+                    let current_image_path = &app.hdim_image.path;
+                    let img_result = image::open(current_image_path);
+
+                    match img_result {
+                        Ok(dynamic_image) => {
+                            let output_path =
+                                PathBuf::from(format!("{}.{}", file_name, format.extension()));
+                            match dynamic_image.save_with_format(&output_path, output_format) {
+                                // Pass output_format directly
+                                Ok(_) => {
+                                    // Optionally, provide feedback to the user that save was successful
+                                    // For now, just switch back to normal mode
+                                }
+                                Err(e) => {
+                                    // Handle save error, e.g., display error message
+                                    eprintln!("Error saving image: {:?}", e);
+                                }
+                            }
+                        }
+                        Err(e) => {
+                            // Handle image loading error
+                            eprintln!("Error loading image for saving: {:?}", e);
+                        }
+                    }
+                    app.mode = AppMode::Normal;
+                }
+                _ => {}
+            }
+        }
         AppMode::Normal => match key.code {
             KeyCode::Char('q') => {
                 // This is now handled in the main loop for a more responsive exit.
@@ -100,6 +147,17 @@ fn handle_key_press(app: &mut App, key: KeyEvent) {
                 if let Some(exif_view) = &mut app.exif_view {
                     exif_view.state.select(Some(0));
                 }
+            }
+            KeyCode::Char('s') | KeyCode::Char('3') => {
+                // New keybinding for Save As
+                app.mode = AppMode::Saving;
+                let original_filename = app
+                    .hdim_image
+                    .path
+                    .file_stem()
+                    .map(|s| s.to_string_lossy().into_owned())
+                    .unwrap_or_default();
+                app.save_as.set_initial_filename(&original_filename);
             }
             KeyCode::Esc => {
                 app.selected_tool = None;

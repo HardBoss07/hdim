@@ -80,6 +80,6 @@ pub fn handle_crop_events(key: KeyEvent, app: &mut App) {
             }
             _ => {}
         },
-        AppMode::ExifView => {} // Do nothing in ExifView mode
+        AppMode::ExifView | AppMode::Saving => {} // Do nothing in ExifView or Saving mode
     }
 }

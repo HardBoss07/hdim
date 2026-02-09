@@ -1,4 +1,5 @@
 use crate::components::exif_view::ExifView;
+use crate::components::save_as::SaveAs;
 use color_eyre::eyre::{Ok, Result};
 use hdim_core::{
     HdimImage,
@@ -22,6 +23,7 @@ pub enum AppMode {
     Normal,
     EditingCropValue,
     ExifView,
+    Saving,
 }
 
 /// Application state
@@ -55,6 +57,8 @@ pub struct App {
     pub exif_view: Option<ExifView>,
     // Whether to show the right toolbar
     pub show_right_toolbar: bool,
+    // The state of the save as component
+    pub save_as: SaveAs,
 }
 
 impl App {
@@ -78,6 +82,7 @@ impl App {
             exif_data,
             exif_view,
             show_right_toolbar: true,
+            save_as: SaveAs::new(),
         })
     }
 
