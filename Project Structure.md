@@ -45,7 +45,8 @@
 │       │   ├── components/
 │       │   │   ├── crop.rs
 │       │   │   ├── exif_view.rs
-│       │   │   └── mod.rs
+│       │   │   ├── mod.rs
+│       │   │   └── save_as.rs
 │       │   ├── app.rs
 │       │   ├── events.rs
 │       │   ├── main.rs
