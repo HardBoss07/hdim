@@ -1,5 +1,5 @@
 #![cfg(feature = "exif")]
-use super::util::get_ascii;
+use super::util::get_ascii_from_exif;
 use exif::{Exif, In, Tag};
 
 #[derive(Clone, Debug)]
@@ -11,8 +11,8 @@ pub struct DateTimeExif {
 
 pub fn get_date_time_exif(exif: &Exif) -> Option<DateTimeExif> {
     Some(DateTimeExif {
-        original: get_ascii(exif.get_field(Tag::DateTimeOriginal, In::PRIMARY)),
-        digitized: get_ascii(exif.get_field(Tag::DateTimeDigitized, In::PRIMARY)),
-        modified: get_ascii(exif.get_field(Tag::DateTime, In::PRIMARY)),
+        original: get_ascii_from_exif(exif, Tag::DateTimeOriginal, In::PRIMARY),
+        digitized: get_ascii_from_exif(exif, Tag::DateTimeDigitized, In::PRIMARY),
+        modified: get_ascii_from_exif(exif, Tag::DateTime, In::PRIMARY),
     })
 }
