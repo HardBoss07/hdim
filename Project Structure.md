@@ -13,7 +13,8 @@
 │   │   │   │   ├── gps.rs
 │   │   │   │   ├── image.rs
 │   │   │   │   ├── lens.rs
-│   │   │   │   └── mod.rs
+│   │   │   │   ├── mod.rs
+│   │   │   │   └── util.rs
 │   │   │   ├── lib.rs
 │   │   │   └── state.rs
 │   │   ├── tests/
@@ -43,6 +44,7 @@
 │       ├── src/
 │       │   ├── components/
 │       │   │   ├── crop.rs
+│       │   │   ├── exif_view.rs
 │       │   │   └── mod.rs
 │       │   ├── app.rs
 │       │   ├── events.rs
