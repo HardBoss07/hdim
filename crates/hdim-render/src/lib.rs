@@ -34,7 +34,7 @@ pub fn render(image: &DynamicImage, view: &View) -> Result<String> {
             let source_pixel_x = view.source_x + (x as f32 * x_ratio) as u32;
             let source_pixel_y_top = view.source_y + (y as f32 * y_ratio) as u32;
 
-            let top = get_average_rgb(
+            let top_color = get_average_rgb(
                 image,
                 source_pixel_x,
                 source_pixel_y_top,
@@ -43,12 +43,12 @@ pub fn render(image: &DynamicImage, view: &View) -> Result<String> {
             );
 
             // Calculate the source pixel coordinates for the bottom half-block
-            let source_pixel_y_bot = source_pixel_y_top + top_block_height;
+            let source_pixel_y_bottom = source_pixel_y_top + top_block_height;
 
-            let bot = get_average_rgb(
+            let bottom_color = get_average_rgb(
                 image,
                 source_pixel_x,
-                source_pixel_y_bot,
+                source_pixel_y_bottom,
                 block_width,
                 bottom_block_height,
             );
@@ -56,7 +56,12 @@ pub fn render(image: &DynamicImage, view: &View) -> Result<String> {
             write!(
                 output,
                 "\x1b[48;2;{};{};{}m\x1b[38;2;{};{};{}m▄",
-                top[0], top[1], top[2], bot[0], bot[1], bot[2]
+                top_color[0],
+                top_color[1],
+                top_color[2],
+                bottom_color[0],
+                bottom_color[1],
+                bottom_color[2]
             )?;
         }
         output.push_str("\x1b[0m\n");

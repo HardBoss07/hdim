@@ -18,9 +18,9 @@ pub fn get_average_rgb(
     let end_y = (start_y + height).min(image_height);
     let end_x = (start_x + width).min(image_width);
 
-    for py in start_y..end_y {
-        for px in start_x..end_x {
-            let pixel = image.get_pixel(px, py);
+    for pixel_y in start_y..end_y {
+        for pixel_x in start_x..end_x {
+            let pixel = image.get_pixel(pixel_x, pixel_y);
             r_total += pixel[0] as u64;
             g_total += pixel[1] as u64;
             b_total += pixel[2] as u64;
