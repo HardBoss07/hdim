@@ -41,20 +41,8 @@ pub fn render(frame: &mut Frame, app: &mut App) {
     let right_toolbar_area = middle_layout[2];
 
     // RENDER THE VIEWPORT
-    let image_width = app.hdim_image.width;
-    let image_height = app.hdim_image.height;
-
-    let source_width = (main_area.width as f32 * app.zoom).round() as u32;
-    let source_height = (main_area.height as f32 * app.zoom * 2.0).round() as u32;
-
-    app.source_pos.0 = app
-        .source_pos
-        .0
-        .min(image_width.saturating_sub(source_width));
-    app.source_pos.1 = app
-        .source_pos
-        .1
-        .min(image_height.saturating_sub(source_height));
+    let (source_width, source_height) =
+        app.calculate_viewport(main_area.width as u32, main_area.height as u32);
 
     let view = View {
         source_x: app.source_pos.0,

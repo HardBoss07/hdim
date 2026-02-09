@@ -97,9 +97,9 @@ impl App {
     }
 
     /// Moves the viewport on the source image.
-    pub fn scroll(&mut self, dx: i32, dy: i32) {
-        self.source_pos.0 = self.source_pos.0.saturating_add_signed(dx);
-        self.source_pos.1 = self.source_pos.1.saturating_add_signed(dy);
+    pub fn scroll(&mut self, delta_x: i32, delta_y: i32) {
+        self.source_pos.0 = self.source_pos.0.saturating_add_signed(delta_x);
+        self.source_pos.1 = self.source_pos.1.saturating_add_signed(delta_y);
         self.clamp_source_pos();
     }
 
@@ -113,5 +113,26 @@ impl App {
         if self.source_pos.1 > image_height {
             self.source_pos.1 = image_height;
         }
+    }
+
+    /// Calculates the viewport dimensions and clamps the source position.
+    /// Returns the calculated source width and height in pixels.
+    pub fn calculate_viewport(&mut self, target_width: u32, target_height: u32) -> (u32, u32) {
+        let source_width = (target_width as f32 * self.zoom).round() as u32;
+        let source_height = (target_height as f32 * self.zoom * 2.0).round() as u32;
+
+        let image_width = self.hdim_image.width;
+        let image_height = self.hdim_image.height;
+
+        self.source_pos.0 = self
+            .source_pos
+            .0
+            .min(image_width.saturating_sub(source_width));
+        self.source_pos.1 = self
+            .source_pos
+            .1
+            .min(image_height.saturating_sub(source_height));
+
+        (source_width, source_height)
     }
 }

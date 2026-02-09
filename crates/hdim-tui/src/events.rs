@@ -9,18 +9,29 @@ use std::time::{Duration, Instant};
 const PAN_AMOUNT_CHARACTERS: u32 = 10; // Number of characters to pan per key press
 const ZOOM_FACTOR: f32 = 1.2; // Zoom factor per key press
 
+fn drain_event_queue_keeping_last_key() -> Result<Option<KeyEvent>> {
+    let mut last_key_event = None;
+    while event::poll(Duration::from_millis(0))? {
+        if let Event::Key(key) = event::read()? {
+            if key.kind == KeyEventKind::Press {
+                last_key_event = Some(key);
+            }
+        }
+    }
+    Ok(last_key_event)
+}
+
+fn drain_event_queue() -> Result<()> {
+    while event::poll(Duration::from_millis(0))? {
+        let _ = event::read();
+    }
+    Ok(())
+}
+
 pub fn handle_events(app: &mut App) -> Result<bool> {
     if event::poll(Duration::from_millis(16))? {
         if app.last_input_time.elapsed() >= app.input_delay {
-            let mut last_key_event = None;
-            // Drain the event queue, only keeping the last key press event
-            while event::poll(Duration::from_millis(0))? {
-                if let Event::Key(key) = event::read()? {
-                    if key.kind == KeyEventKind::Press {
-                        last_key_event = Some(key);
-                    }
-                }
-            }
+            let last_key_event = drain_event_queue_keeping_last_key()?;
 
             if let Some(key) = last_key_event {
                 app.last_input_time = Instant::now();
@@ -30,10 +41,7 @@ pub fn handle_events(app: &mut App) -> Result<bool> {
                 }
             }
         } else {
-            // If the input delay hasn't passed, drain the queue to prevent event buildup
-            while event::poll(Duration::from_millis(0))? {
-                let _ = event::read();
-            }
+            drain_event_queue()?;
         }
     }
     Ok(false)
@@ -104,9 +112,9 @@ fn handle_key_press(app: &mut App, key: KeyEvent) {
                     let output_format = format.to_image_format(); // Changed to to_image_format
 
                     let current_image_path = &app.hdim_image.path;
-                    let img_result = image::open(current_image_path);
+                    let image_result = image::open(current_image_path);
 
-                    match img_result {
+                    match image_result {
                         Ok(dynamic_image) => {
                             let output_path =
                                 PathBuf::from(format!("{}.{}", file_name, format.extension()));
