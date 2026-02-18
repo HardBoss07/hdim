@@ -8,6 +8,7 @@
 - Use `cargo check` for syntax / compiler errors.
 - Do not use emojis in the responses, especially the code you're writing.
 - **Formatting:** Always run `cargo fmt` after writing code.
+- You must **check off** the checkboxes that are done.
 
 The project is a Rust workspace composed of three crates located in `crates/`: `hdim-core`, `hdim-render`, and `hdim-tui`.
 
@@ -92,6 +93,40 @@ The workspace is defined in the root `Cargo.toml`.
 - [ ] **hdim-core**: Undo/Redo stack.
 - [ ] **hdim-tui**: Export/Save dialogs.
 
+### Phase 5: Advanced Features & Image Adjustments
+
+- [ ] **hdim-core**: Undo/Redo stack.
+- [ ] **hdim-tui**: Export/Save dialogs.
+- [ ] **hdim-core**: Implement the logic for the following adjustment sliders (Range: -100 to +100):
+- [ ] **hdim-tui**: Implement the components with using the logic from `hdim-core`
+- [ ] **Saturation** (using `palette`)
+- [ ] **Vibrance**
+- [ ] **Exposure**
+- [ ] **Brightness**
+- [ ] **Contrast**
+- [ ] **Warmth**
+- [ ] **Hue**
+- [ ] **Fade**
+- [ ] **Film Grain**
+- [ ] **Noise**
+
+## Tools (Translation & Reference)
+
+The following suite of tools—inspired by standard mobile editors—must be implemented within the `hdim-core` manipulation logic and exposed via `hdim-tui` sliders:
+
+| Tool           | Description                                              | Range        |
+| -------------- | -------------------------------------------------------- | ------------ |
+| **Saturation** | Intensity of colors.                                     | -100 to +100 |
+| **Vibrance**   | Smart saturation (protects skin tones/saturated pixels). | -100 to +100 |
+| **Exposure**   | Overall light captured in the image.                     | -100 to +100 |
+| **Brightness** | Overall lightness of the image.                          | -100 to +100 |
+| **Contrast**   | Difference between light and dark areas.                 | -100 to +100 |
+| **Warmth**     | Shift between blue (cool) and yellow (warm) tones.       | -100 to +100 |
+| **Hue**        | Shifts the entire color spectrum.                        | -100 to +100 |
+| **Fade**       | Reduces contrast in shadows for a "matte" look.          | -100 to +100 |
+| **Film Grain** | Adds simulated analog texture.                           | -100 to +100 |
+| **Noise**      | Adds digital luminance/chroma noise.                     | -100 to +100 |
+
 ## Tech Stack
 
 - **Language:** Rust (2021 Edition)
@@ -106,4 +141,12 @@ The workspace is defined in the root `Cargo.toml`.
 - **Formatting:** Strictly run `cargo fmt` on every change.
 - **Snapshots:** When changing rendering logic, run `cargo insta review` to accept/reject snapshot changes.
 - **Errors:** Use `color-eyre` for pretty panics in the binary, `thiserror` for internal library errors.
+- **Args:** Minimal parsing; expecting only `[IMAGE_PATH]` via `std::env::args`.
+
+## Coding Standards (Updated)
+
+- **Formatting:** Strictly run `cargo fmt` on every change.
+- **Snapshots:** When changing rendering logic, run `cargo insta review` to accept/reject snapshot changes.
+- **Errors:** Use `color-eyre` for pretty panics in the binary, `thiserror` for internal library errors.
+- **Tool Retention:** Existing tools and features must not be removed when adding new adjustments. All legacy manipulation logic must remain functional or be refactored to support the new slider system.
 - **Args:** Minimal parsing; expecting only `[IMAGE_PATH]` via `std::env::args`.
