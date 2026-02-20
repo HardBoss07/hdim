@@ -12,3 +12,5 @@ image = { workspace = true }
 thiserror = { workspace = true }
 anyhow = { workspace = true }
 kamadak-exif = { workspace = true, optional = true }
+palette = { workspace = true, features = ["serde"] }
+rand = { workspace = true }
