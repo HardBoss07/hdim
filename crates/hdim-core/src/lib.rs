@@ -3,6 +3,7 @@ pub mod adjustments;
 pub mod exif;
 pub mod history;
 pub mod state;
+pub mod utils;
 use crate::history::history::History;
 use anyhow::Result;
 use image::{DynamicImage, GenericImageView};

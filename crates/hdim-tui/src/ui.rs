@@ -4,6 +4,8 @@ use crate::components::save_as::SaveAs;
 use ansi_to_tui::IntoText;
 use color_eyre::eyre::Result;
 use hdim_core::state::Tool;
+use hdim_core::HdimImage;
+use hdim_core::utils::file_name_from_path;
 use hdim_render::view::View;
 use ratatui::{
     prelude::*,
@@ -69,9 +71,12 @@ pub fn render(frame: &mut Frame, app: &mut App) {
     );
 
     // Render Top Navigation Bar
+    let image_name = file_name_from_path(&app.hdim_image.path).unwrap_or_else(|| "Unknown".to_string());
+    let top_nav_title = format!("hdim - {}", image_name);
+    let top_nav_content = format!(" Editing: {} ", image_name);
     frame.render_widget(
-        Paragraph::new(" Navigation Bar / Title ")
-            .block(Block::default().borders(Borders::ALL).title("Top")),
+        Paragraph::new(top_nav_content)
+            .block(Block::default().borders(Borders::ALL).title(top_nav_title)),
         top_nav_area,
     );
 
