@@ -1,10 +1,22 @@
 # Project Structure
 
 ```
-./
+hdim/
 ├── crates/
 │   ├── hdim-core/
 │   │   ├── src/
+│   │   │   ├── adjustments/
+│   │   │   │   ├── brightness.rs
+│   │   │   │   ├── contrast.rs
+│   │   │   │   ├── exposure.rs
+│   │   │   │   ├── fade.rs
+│   │   │   │   ├── grain.rs
+│   │   │   │   ├── hue.rs
+│   │   │   │   ├── mod.rs
+│   │   │   │   ├── noise.rs
+│   │   │   │   ├── saturation.rs
+│   │   │   │   ├── vibrance.rs
+│   │   │   │   └── warmth.rs
 │   │   │   ├── exif/
 │   │   │   │   ├── camera.rs
 │   │   │   │   ├── date_time.rs
@@ -15,6 +27,9 @@
 │   │   │   │   ├── lens.rs
 │   │   │   │   ├── mod.rs
 │   │   │   │   └── util.rs
+│   │   │   ├── history/
+│   │   │   │   ├── history.rs
+│   │   │   │   └── mod.rs
 │   │   │   ├── lib.rs
 │   │   │   └── state.rs
 │   │   ├── tests/
@@ -43,6 +58,10 @@
 │   └── hdim-tui/
 │       ├── src/
 │       │   ├── components/
+│       │   │   ├── sliders/
+│       │   │   │   ├── mod.rs
+│       │   │   │   └── slider.rs
+│       │   │   ├── adjustment_panel.rs
 │       │   │   ├── crop.rs
 │       │   │   ├── exif_view.rs
 │       │   │   ├── mod.rs

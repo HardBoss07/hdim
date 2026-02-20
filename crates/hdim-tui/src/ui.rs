@@ -1,4 +1,4 @@
-use crate::app::{App, AppMode};
+use crate::app::{ActiveWidget, App, AppMode};
 use crate::components::crop::render_crop_options;
 use crate::components::save_as::SaveAs;
 use ansi_to_tui::IntoText;
@@ -44,6 +44,10 @@ pub fn render(frame: &mut Frame, app: &mut App) {
     let (source_width, source_height) =
         app.calculate_viewport(main_area.width as u32, main_area.height as u32);
 
+    // Get adjusted image
+    app.hdim_image.adjustments = app.adjustment_panel.get_adjustments();
+    let adjusted_image = app.hdim_image.apply_adjustments();
+
     let view = View {
         source_x: app.source_pos.0,
         source_y: app.source_pos.1,
@@ -53,7 +57,7 @@ pub fn render(frame: &mut Frame, app: &mut App) {
         target_height: main_area.height as u32,
     };
 
-    let image_text = match hdim_render::render(&app.hdim_image.data, &view) {
+    let image_text = match hdim_render::render(&adjusted_image, &view) {
         Result::Ok(ansi_string) => ansi_string.into_text().unwrap_or_default(),
         Err(_) => "Error rendering image".into_text().unwrap(),
     };
@@ -72,12 +76,14 @@ pub fn render(frame: &mut Frame, app: &mut App) {
     );
 
     // Render Left Toolbar
-    let tools = List::new([
+    let tools_list_items = [
         ListItem::new("1. Crop"),
         ListItem::new("2. Exif"),
         ListItem::new("3. Save As"),
-    ])
-    .block(Block::default().borders(Borders::ALL).title("Tools"));
+        ListItem::new("4. Adjustments"),
+    ];
+    let tools =
+        List::new(tools_list_items).block(Block::default().borders(Borders::ALL).title("Tools"));
     frame.render_widget(tools, left_toolbar_area);
 
     // Render Main Content
@@ -88,34 +94,58 @@ pub fn render(frame: &mut Frame, app: &mut App) {
 
     // Render Right Toolbar (if visible)
     if app.show_right_toolbar {
-        match app.mode {
-            AppMode::ExifView => {
-                if let Some(exif_view) = &mut app.exif_view {
-                    let mut list = exif_view.widget();
-                    if app.active_widget == crate::app::ActiveWidget::RightToolbar {
-                        list =
-                            list.highlight_style(Style::default().add_modifier(Modifier::REVERSED));
+        match app.active_widget {
+            ActiveWidget::Adjustments => {
+                let is_editing = app.mode == AppMode::EditingAdjustmentValue;
+                app.adjustment_panel.render(
+                    frame,
+                    right_toolbar_area,
+                    is_editing,
+                    &app.adjustment_input,
+                );
+            }
+            ActiveWidget::RightToolbar => {
+                // This should be the variant for the right toolbar
+                match app.mode {
+                    AppMode::ExifView => {
+                        if let Some(exif_view) = &mut app.exif_view {
+                            let mut list = exif_view.widget();
+                            // No need to check active_widget == RightToolbar again here
+                            list = list
+                                .highlight_style(Style::default().add_modifier(Modifier::REVERSED));
+                            frame.render_stateful_widget(
+                                list,
+                                right_toolbar_area,
+                                &mut exif_view.state,
+                            );
+                        } else {
+                            frame.render_widget(
+                                List::new(vec![ListItem::new("No EXIF data available.")]).block(
+                                    Block::default().borders(Borders::ALL).title("EXIF Data"),
+                                ),
+                                right_toolbar_area,
+                            );
+                        }
                     }
-                    frame.render_stateful_widget(list, right_toolbar_area, &mut exif_view.state);
-                } else {
-                    frame.render_widget(
-                        List::new(vec![ListItem::new("No EXIF data available.")])
-                            .block(Block::default().borders(Borders::ALL).title("EXIF Data")),
-                        right_toolbar_area,
-                    );
+                    AppMode::Normal
+                    | AppMode::EditingCropValue
+                    | AppMode::Saving
+                    | AppMode::EditingAdjustmentValue => {
+                        if let Some(Tool::Crop) = app.selected_tool {
+                            frame.render_widget(render_crop_options(app), right_toolbar_area);
+                        } else {
+                            frame.render_widget(
+                                List::new(vec![ListItem::new("Right Toolbar Content")])
+                                    .block(Block::default().borders(Borders::ALL).title("Right")),
+                                right_toolbar_area,
+                            );
+                        }
+                    }
                 }
             }
-            AppMode::Normal | AppMode::EditingCropValue | AppMode::Saving => {
-                // Include AppMode::Saving here for right toolbar
-                if let Some(Tool::Crop) = app.selected_tool {
-                    frame.render_widget(render_crop_options(app), right_toolbar_area);
-                } else {
-                    frame.render_widget(
-                        List::new(vec![ListItem::new("Right Toolbar Content")])
-                            .block(Block::default().borders(Borders::ALL).title("Right")),
-                        right_toolbar_area,
-                    );
-                }
+            _ => {
+                // For other ActiveWidgets that don't use the right toolbar specifically, render nothing or a default
+                frame.render_widget(Block::default().borders(Borders::NONE), right_toolbar_area);
             }
         };
     } else {
@@ -124,15 +154,21 @@ pub fn render(frame: &mut Frame, app: &mut App) {
     }
 
     // Render Bottom Navigation Bar
-    let bottom_text = match app.mode {
-        AppMode::Normal if app.selected_tool.is_some() => {
-            "Tab to switch | Enter to edit/select | Esc to deselect"
+    let bottom_text = match app.active_widget {
+        // Changed to match active_widget
+        ActiveWidget::Adjustments => {
+            "Up/Down to select slider | Left/Right to change value | Esc to exit adjustments"
         }
-        AppMode::ExifView => "Up/Down to scroll | Esc to deselect",
-        AppMode::Saving => {
-            "Up/Down to select format | Left/Right to move cursor | Enter to Save | Esc to Cancel"
-        }
-        _ => " Arrows to Pan | PgUp/PgDn to Zoom | 'q' to Quit ",
+        _ => match app.mode {
+            AppMode::Normal if app.selected_tool.is_some() => {
+                "Tab to switch | Enter to edit/select | Esc to deselect"
+            }
+            AppMode::ExifView => "Up/Down to scroll | Esc to deselect",
+            AppMode::Saving => {
+                "Up/Down to select format | Left/Right to move cursor | Enter to Save | Esc to Cancel"
+            }
+            _ => " Arrows to Pan | PgUp/PgDn to Zoom | 'q' to Quit ",
+        },
     };
 
     frame.render_widget(

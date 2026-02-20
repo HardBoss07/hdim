@@ -1,3 +1,4 @@
+use crate::components::adjustment_panel::AdjustmentPanel;
 use crate::components::exif_view::ExifView;
 use crate::components::save_as::SaveAs;
 use color_eyre::eyre::{Ok, Result};
@@ -15,6 +16,7 @@ use std::{
 pub enum ActiveWidget {
     Main,
     Tools,
+    Adjustments,
     RightToolbar,
 }
 
@@ -22,6 +24,7 @@ pub enum ActiveWidget {
 pub enum AppMode {
     Normal,
     EditingCropValue,
+    EditingAdjustmentValue,
     ExifView,
     Saving,
 }
@@ -51,6 +54,8 @@ pub struct App {
     pub selected_crop_option_index: usize,
     // The input string for crop values
     pub crop_input: String,
+    // The input string for adjustment values
+    pub adjustment_input: String,
     // The EXIF data of the image
     pub exif_data: Option<ExifData>,
     // The state of the EXIF view
@@ -59,13 +64,17 @@ pub struct App {
     pub show_right_toolbar: bool,
     // The state of the save as component
     pub save_as: SaveAs,
+    // The state of the adjustment panel
+    pub adjustment_panel: AdjustmentPanel,
 }
 
 impl App {
-    pub fn new(hdim_image: HdimImage, initial_zoom: f32) -> Result<Self> {
+    pub fn new(mut hdim_image: HdimImage, initial_zoom: f32) -> Result<Self> {
         let mut file = File::open(hdim_image.path.clone())?;
         let exif_data = ExifData::get_exif_data(&mut file).ok();
         let exif_view = exif_data.as_ref().map(ExifView::new);
+
+        let adjustment_panel = AdjustmentPanel::new(hdim_image.adjustments);
 
         Ok(Self {
             hdim_image,
@@ -79,10 +88,12 @@ impl App {
             mode: AppMode::Normal,
             selected_crop_option_index: 0,
             crop_input: String::new(),
+            adjustment_input: String::new(),
             exif_data,
             exif_view,
             show_right_toolbar: true,
             save_as: SaveAs::new(),
+            adjustment_panel,
         })
     }
 

@@ -1,4 +1,5 @@
 use crate::app::{ActiveWidget, App, AppMode};
+use crate::components::adjustment_panel::AdjustmentsChange;
 use crate::components::crop::handle_crop_events;
 use color_eyre::eyre::Result;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
@@ -68,6 +69,33 @@ fn handle_key_press(app: &mut App, key: KeyEvent) {
             }
             _ => {}
         },
+        AppMode::EditingAdjustmentValue => match key.code {
+            KeyCode::Char(c) if c.is_ascii_digit() || c == '-' || c == '.' => {
+                app.adjustment_input.push(c);
+            }
+            KeyCode::Backspace => {
+                app.adjustment_input.pop();
+            }
+            KeyCode::Enter => {
+                if let Ok(value) = app.adjustment_input.parse::<f32>() {
+                    let (min, max) = app.adjustment_panel.get_selected_slider_bounds();
+                    let clamped_value = value.clamp(min, max);
+                    app.adjustment_panel
+                        .update_selected_slider_value(clamped_value);
+
+                    let new_adjustments = app.adjustment_panel.get_adjustments();
+                    app.hdim_image.adjustments = new_adjustments;
+                    app.hdim_image.history.record_adjustments(new_adjustments);
+                }
+                app.adjustment_input.clear();
+                app.mode = AppMode::Normal;
+            }
+            KeyCode::Esc => {
+                app.adjustment_input.clear();
+                app.mode = AppMode::Normal;
+            }
+            _ => {}
+        },
         AppMode::EditingCropValue => match key.code {
             KeyCode::Char(c) if c.is_ascii_digit() => {
                 app.crop_input.push(c);
@@ -109,30 +137,20 @@ fn handle_key_press(app: &mut App, key: KeyEvent) {
                 KeyCode::Enter => {
                     let file_name = app.save_as.file_name();
                     let format = app.save_as.selected_format();
-                    let output_format = format.to_image_format(); // Changed to to_image_format
+                    let output_format = format.to_image_format();
 
-                    let current_image_path = &app.hdim_image.path;
-                    let image_result = image::open(current_image_path);
+                    let adjusted_image = app.hdim_image.apply_adjustments();
 
-                    match image_result {
-                        Ok(dynamic_image) => {
-                            let output_path =
-                                PathBuf::from(format!("{}.{}", file_name, format.extension()));
-                            match dynamic_image.save_with_format(&output_path, output_format) {
-                                // Pass output_format directly
-                                Ok(_) => {
-                                    // Optionally, provide feedback to the user that save was successful
-                                    // For now, just switch back to normal mode
-                                }
-                                Err(e) => {
-                                    // Handle save error, e.g., display error message
-                                    eprintln!("Error saving image: {:?}", e);
-                                }
-                            }
+                    let output_path =
+                        PathBuf::from(format!("{}.{}", file_name, format.extension()));
+                    match adjusted_image.save_with_format(&output_path, output_format) {
+                        Ok(_) => {
+                            // Optionally, provide feedback to the user that save was successful
+                            // For now, just switch back to normal mode
                         }
                         Err(e) => {
-                            // Handle image loading error
-                            eprintln!("Error loading image for saving: {:?}", e);
+                            // Handle save error, e.g., display error message
+                            eprintln!("Error saving image: {:?}", e);
                         }
                     }
                     app.mode = AppMode::Normal;
@@ -167,6 +185,10 @@ fn handle_key_press(app: &mut App, key: KeyEvent) {
                     .unwrap_or_default();
                 app.save_as.set_initial_filename(&original_filename);
             }
+            KeyCode::Char('4') => {
+                // Keybinding for Adjustments
+                app.active_widget = ActiveWidget::Adjustments;
+            }
             KeyCode::Esc => {
                 app.selected_tool = None;
                 app.active_widget = ActiveWidget::Main;
@@ -185,6 +207,40 @@ fn handle_key_press(app: &mut App, key: KeyEvent) {
                             KeyCode::PageDown => app.zoom(ZOOM_FACTOR),
                             _ => {}
                         },
+                        ActiveWidget::Adjustments => {
+                            if let Some(change) = app.adjustment_panel.handle_event(key) {
+                                match change {
+                                    AdjustmentsChange::Updated(new_adjustments) => {
+                                        app.hdim_image.adjustments = new_adjustments;
+                                        app.hdim_image.history.record_adjustments(new_adjustments);
+                                    }
+                                    AdjustmentsChange::Undo(_adjustments) => {
+                                        // _adjustments is current state from panel, not prev
+                                        if let Some(prev_adjustments) =
+                                            app.hdim_image.history.undo()
+                                        {
+                                            app.hdim_image.adjustments = prev_adjustments;
+                                            app.adjustment_panel
+                                                .update_sliders_from_adjustments(prev_adjustments);
+                                        }
+                                    }
+                                    AdjustmentsChange::Redo(_adjustments) => {
+                                        // _adjustments is current state from panel, not next
+                                        if let Some(next_adjustments) =
+                                            app.hdim_image.history.redo()
+                                        {
+                                            app.hdim_image.adjustments = next_adjustments;
+                                            app.adjustment_panel
+                                                .update_sliders_from_adjustments(next_adjustments);
+                                        }
+                                    }
+                                    AdjustmentsChange::EnterPressed => {
+                                        app.mode = AppMode::EditingAdjustmentValue;
+                                        app.adjustment_input.clear();
+                                    }
+                                }
+                            }
+                        }
                         _ => {}
                     }
                 }

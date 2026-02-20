@@ -89,26 +89,26 @@ The workspace is defined in the root `Cargo.toml`.
 
 ### Phase 4: Advanced Features
 
-- [ ] **hdim-core**: Color adjustments (brightness, contrast) using `palette`.
-- [ ] **hdim-core**: Undo/Redo stack.
-- [ ] **hdim-tui**: Export/Save dialogs.
+- [x] **hdim-core**: Color adjustments (brightness, contrast) using `palette`.
+- [x] **hdim-core**: Undo/Redo stack.
+- [x] **hdim-tui**: Export/Save dialogs.
 
 ### Phase 5: Advanced Features & Image Adjustments
 
-- [ ] **hdim-core**: Undo/Redo stack.
-- [ ] **hdim-tui**: Export/Save dialogs.
-- [ ] **hdim-core**: Implement the logic for the following adjustment sliders (Range: -100 to +100):
-- [ ] **hdim-tui**: Implement the components with using the logic from `hdim-core`
-- [ ] **Saturation** (using `palette`)
-- [ ] **Vibrance**
-- [ ] **Exposure**
-- [ ] **Brightness**
-- [ ] **Contrast**
-- [ ] **Warmth**
-- [ ] **Hue**
-- [ ] **Fade**
-- [ ] **Film Grain**
-- [ ] **Noise**
+- [x] **hdim-core**: Undo/Redo stack.
+- [x] **hdim-tui**: Export/Save dialogs.
+- [x] **hdim-core**: Implement the logic for the following adjustment sliders (Range: -100 to +100):
+- [x] **hdim-tui**: Implement the components with using the logic from `hdim-core`
+- [x] **Saturation** (using `palette`)
+- [x] **Vibrance**
+- [x] **Exposure**
+- [x] **Brightness**
+- [x] **Contrast**
+- [x] **Warmth**
+- [x] **Hue**
+- [x] **Fade**
+- [x] **Film Grain**
+- [x] **Noise**
 
 ## Tools (Translation & Reference)
 
