@@ -3,12 +3,10 @@ use crate::components::adjustment_panel::AdjustmentsChange;
 use crate::components::crop::handle_crop_events;
 use color_eyre::eyre::Result;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
+use hdim_core::consts::{PAN_AMOUNT_CHARACTERS, ZOOM_FACTOR};
 use hdim_core::state::Tool;
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
-
-const PAN_AMOUNT_CHARACTERS: u32 = 10; // Number of characters to pan per key press
-const ZOOM_FACTOR: f32 = 1.2; // Zoom factor per key press
 
 fn drain_event_queue_keeping_last_key() -> Result<Option<KeyEvent>> {
     let mut last_key_event = None;

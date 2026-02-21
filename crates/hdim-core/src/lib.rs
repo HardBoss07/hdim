@@ -1,4 +1,5 @@
 pub mod adjustments;
+pub mod consts;
 #[cfg(feature = "exif")]
 pub mod exif;
 pub mod history;
