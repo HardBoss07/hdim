@@ -166,7 +166,9 @@ impl AdjustmentPanel {
 
             let render_slider = Slider::new(&slider.label, slider.value, slider.min, slider.max)
                 .style(if is_selected {
-                    ratatui::style::Style::default().fg(ratatui::style::Color::Yellow)
+                    ratatui::style::Style::default()
+                        .fg(ratatui::style::Color::Yellow)
+                        .add_modifier(ratatui::style::Modifier::BOLD)
                 } else {
                     ratatui::style::Style::default()
                 });
