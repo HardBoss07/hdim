@@ -1,6 +1,8 @@
+use crate::consts::RNG_SEED;
 use image::{DynamicImage, GenericImage, Rgba};
 use palette::{FromColor, Lch, Srgb};
-use rand::Rng;
+use rand::rngs::StdRng;
+use rand::{Rng, SeedableRng};
 
 pub fn apply_grain(image: &DynamicImage, value: f32) -> DynamicImage {
     if value <= 0.0 {
@@ -8,7 +10,7 @@ pub fn apply_grain(image: &DynamicImage, value: f32) -> DynamicImage {
     }
     let mut cloned_image = image.clone();
     let amount = value / 100.0 * 10.0; // Max lightness change
-    let mut rng = rand::thread_rng();
+    let mut rng = StdRng::seed_from_u64(RNG_SEED);
 
     for (x, y, pixel) in cloned_image.to_rgba8().enumerate_pixels() {
         let srgb = Srgb::new(

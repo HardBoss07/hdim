@@ -1,5 +1,7 @@
+use crate::consts::RNG_SEED;
 use image::{DynamicImage, GenericImage, Rgba};
-use rand::Rng;
+use rand::rngs::StdRng;
+use rand::{Rng, SeedableRng};
 
 pub fn apply_noise(image: &DynamicImage, value: f32) -> DynamicImage {
     if value <= 0.0 {
@@ -7,7 +9,8 @@ pub fn apply_noise(image: &DynamicImage, value: f32) -> DynamicImage {
     }
     let mut cloned_image = image.clone();
     let amount = value as i16;
-    let mut rng = rand::thread_rng();
+    // Use a fixed seed to ensure deterministic noise for the same value
+    let mut rng = StdRng::seed_from_u64(RNG_SEED);
 
     for (x, y, pixel) in cloned_image.to_rgba8().enumerate_pixels() {
         let r_noise = rng.gen_range(-amount..amount);
