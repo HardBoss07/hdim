@@ -1,10 +1,10 @@
+use crate::consts::VIBRANCE_MAX_CHROMA;
 use image::{DynamicImage, GenericImage, Rgba};
 use palette::{FromColor, Lch, Srgb};
 
 pub fn apply_vibrance(image: &DynamicImage, value: f32) -> DynamicImage {
     let mut cloned_image = image.clone();
     let factor = value / 100.0;
-    const MAX_CHROMA: f32 = 150.0;
 
     for (x, y, pixel) in cloned_image.to_rgba8().enumerate_pixels() {
         let srgb = Srgb::new(
@@ -15,7 +15,7 @@ pub fn apply_vibrance(image: &DynamicImage, value: f32) -> DynamicImage {
 
         let mut lch: Lch = Lch::from_color(srgb);
 
-        let scaling_factor = 1.0 - (lch.chroma / MAX_CHROMA).powf(2.0);
+        let scaling_factor = 1.0 - (lch.chroma / VIBRANCE_MAX_CHROMA).powf(2.0);
         lch.chroma *= 1.0 + factor * scaling_factor;
 
         let new_srgb = Srgb::from_color(lch);

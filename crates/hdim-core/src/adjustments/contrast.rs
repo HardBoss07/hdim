@@ -1,10 +1,10 @@
+use crate::consts::CONTRAST_MID_POINT;
 use image::{DynamicImage, GenericImage, Rgba};
 use palette::{FromColor, Lch, Srgb};
 
 pub fn apply_contrast(image: &DynamicImage, value: f32) -> DynamicImage {
     let mut cloned_image = image.clone();
     let factor = value / 100.0 * 2.0; // Map -100..100 to -2.0..2.0
-    const MIDPOINT: f32 = 50.0; // Midpoint for Lch 'l' (0-100)
 
     for (x, y, pixel) in cloned_image.to_rgba8().enumerate_pixels() {
         let srgb = Srgb::new(
@@ -16,7 +16,7 @@ pub fn apply_contrast(image: &DynamicImage, value: f32) -> DynamicImage {
         let mut lch: Lch = Lch::from_color(srgb);
 
         // Adjust lightness away from midpoint
-        lch.l = MIDPOINT + (lch.l - MIDPOINT) * (1.0 + factor);
+        lch.l = CONTRAST_MID_POINT + (lch.l - CONTRAST_MID_POINT) * (1.0 + factor);
         lch.l = lch.l.clamp(0.0, 100.0); // Clamp L to its valid range
 
         let new_srgb = Srgb::from_color(lch);
