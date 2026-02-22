@@ -2,7 +2,7 @@ use crate::app::{App, AppMode};
 use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::{
     prelude::*,
-    widgets::{Block, Borders, List, ListItem},
+    widgets::{Block, Borders, BorderType, List, ListItem},
 };
 
 pub fn render_crop_options<'a>(app: &'a App) -> List<'a> {
@@ -36,7 +36,7 @@ pub fn render_crop_options<'a>(app: &'a App) -> List<'a> {
         })
         .collect();
 
-    List::new(crop_items).block(Block::default().borders(Borders::ALL).title("Crop Options"))
+    List::new(crop_items).block(Block::default().borders(Borders::ALL).border_type(BorderType::Rounded).title("Crop Options"))
 }
 
 pub fn handle_crop_events(key: KeyEvent, app: &mut App) {

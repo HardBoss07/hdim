@@ -8,7 +8,7 @@ use hdim_core::utils::file_name_from_path;
 use hdim_render::view::View;
 use ratatui::{
     prelude::*,
-    widgets::{Block, Borders, Clear, List, ListItem, Paragraph},
+    widgets::{Block, Borders, BorderType, Clear, List, ListItem, Paragraph},
 };
 
 pub fn render(frame: &mut Frame, app: &mut App) {
@@ -76,7 +76,7 @@ pub fn render(frame: &mut Frame, app: &mut App) {
     let top_nav_content = format!(" Editing: {} ", image_name);
     frame.render_widget(
         Paragraph::new(top_nav_content)
-            .block(Block::default().borders(Borders::ALL).title(top_nav_title)),
+            .block(Block::default().borders(Borders::ALL).border_type(BorderType::Rounded).title(top_nav_title)),
         top_nav_area,
     );
 
@@ -88,12 +88,12 @@ pub fn render(frame: &mut Frame, app: &mut App) {
         ListItem::new("4. Adjustments"),
     ];
     let tools =
-        List::new(tools_list_items).block(Block::default().borders(Borders::ALL).title("Tools"));
+        List::new(tools_list_items).block(Block::default().borders(Borders::ALL).border_type(BorderType::Rounded).title("Tools"));
     frame.render_widget(tools, left_toolbar_area);
 
     // Render Main Content
     frame.render_widget(
-        Paragraph::new(image_text).block(Block::default().borders(Borders::ALL).title(main_title)),
+        Paragraph::new(image_text).block(Block::default().borders(Borders::ALL).border_type(BorderType::Rounded).title(main_title)),
         main_area,
     );
 
@@ -126,7 +126,7 @@ pub fn render(frame: &mut Frame, app: &mut App) {
                         } else {
                             frame.render_widget(
                                 List::new(vec![ListItem::new("No EXIF data available.")]).block(
-                                    Block::default().borders(Borders::ALL).title("EXIF Data"),
+                                    Block::default().borders(Borders::ALL).border_type(BorderType::Rounded).title("EXIF Data"),
                                 ),
                                 right_toolbar_area,
                             );
@@ -141,7 +141,7 @@ pub fn render(frame: &mut Frame, app: &mut App) {
                         } else {
                             frame.render_widget(
                                 List::new(vec![ListItem::new("Right Toolbar Content")])
-                                    .block(Block::default().borders(Borders::ALL).title("Right")),
+                                    .block(Block::default().borders(Borders::ALL).border_type(BorderType::Rounded).title("Right")),
                                 right_toolbar_area,
                             );
                         }
@@ -177,7 +177,7 @@ pub fn render(frame: &mut Frame, app: &mut App) {
     };
 
     frame.render_widget(
-        Paragraph::new(bottom_text).block(Block::default().borders(Borders::ALL).title("Bottom")),
+        Paragraph::new(bottom_text).block(Block::default().borders(Borders::ALL).border_type(BorderType::Rounded).title("Bottom")),
         bottom_nav_area,
     );
 

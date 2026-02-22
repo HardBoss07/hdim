@@ -2,7 +2,7 @@ use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use hdim_core::Adjustments;
 use ratatui::{
     layout::{Constraint, Direction, Layout},
-    widgets::{Block, Borders, Widget},
+    widgets::{Block, Borders, BorderType, Widget},
 };
 
 use super::sliders::slider::Slider;
@@ -136,7 +136,7 @@ impl AdjustmentPanel {
         is_editing_value: bool,
         input_string: &str,
     ) {
-        let main_block = Block::default().borders(Borders::ALL).title("Adjustments");
+        let main_block = Block::default().borders(Borders::ALL).border_type(BorderType::Rounded).title("Adjustments");
 
         let inner_area = main_block.inner(area);
         frame.render_widget(main_block, area);
