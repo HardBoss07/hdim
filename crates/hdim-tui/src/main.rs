@@ -1,6 +1,7 @@
 mod app;
 mod components;
 mod events;
+mod theme;
 mod ui;
 use app::App;
 use color_eyre::eyre::{Result, eyre};
