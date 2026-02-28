@@ -2,8 +2,10 @@ use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use hdim_core::Adjustments;
 use ratatui::{
     layout::{Constraint, Direction, Layout},
-    widgets::{Block, Borders, BorderType, Widget},
+    widgets::{Block, BorderType, Borders},
 };
+
+use crate::theme::STYLES;
 
 use super::sliders::slider::Slider;
 
@@ -27,10 +29,10 @@ impl AdjustmentPanel {
             Slider::new("Brightness", initial_adjustments.brightness, -100.0, 100.0),
             Slider::new("Contrast", initial_adjustments.contrast, -100.0, 100.0),
             Slider::new("Exposure", initial_adjustments.exposure, -100.0, 100.0),
-            Slider::new("Fade", initial_adjustments.fade, 0.0, 100.0), // Fade is typically 0 to 100
-            Slider::new("Grain", initial_adjustments.grain, 0.0, 100.0), // Grain is typically 0 to 100
+            Slider::new("Fade", initial_adjustments.fade, 0.0, 100.0),
+            Slider::new("Grain", initial_adjustments.grain, 0.0, 100.0),
             Slider::new("Hue", initial_adjustments.hue, -100.0, 100.0),
-            Slider::new("Noise", initial_adjustments.noise, 0.0, 100.0), // Noise is typically 0 to 100
+            Slider::new("Noise", initial_adjustments.noise, 0.0, 100.0),
             Slider::new("Saturation", initial_adjustments.saturation, -100.0, 100.0),
             Slider::new("Vibrance", initial_adjustments.vibrance, -100.0, 100.0),
             Slider::new("Warmth", initial_adjustments.warmth, -100.0, 100.0),
@@ -61,14 +63,16 @@ impl AdjustmentPanel {
                 }
             }
             KeyCode::Left => {
-                self.sliders[self.selected_slider].decrement(step);
-                self.update_adjustments();
-                change = Some(AdjustmentsChange::Updated(self.adjustments));
+                if self.sliders[self.selected_slider].decrement(step) {
+                    self.update_adjustments();
+                    change = Some(AdjustmentsChange::Updated(self.adjustments));
+                }
             }
             KeyCode::Right => {
-                self.sliders[self.selected_slider].increment(step);
-                self.update_adjustments();
-                change = Some(AdjustmentsChange::Updated(self.adjustments));
+                if self.sliders[self.selected_slider].increment(step) {
+                    self.update_adjustments();
+                    change = Some(AdjustmentsChange::Updated(self.adjustments));
+                }
             }
             KeyCode::Enter => {
                 change = Some(AdjustmentsChange::EnterPressed);
@@ -85,7 +89,7 @@ impl AdjustmentPanel {
     }
 
     fn update_adjustments(&mut self) {
-        let current_slider_value = self.sliders[self.selected_slider].value();
+        let current_slider_value = self.sliders[self.selected_slider].value;
         match self.selected_slider {
             0 => self.adjustments.brightness = current_slider_value,
             1 => self.adjustments.contrast = current_slider_value,
@@ -125,8 +129,9 @@ impl AdjustmentPanel {
     }
 
     pub fn update_selected_slider_value(&mut self, value: f32) {
-        self.sliders[self.selected_slider].set_value(value);
-        self.update_adjustments();
+        if self.sliders[self.selected_slider].set_value(value) {
+            self.update_adjustments();
+        }
     }
 
     pub fn render(
@@ -136,7 +141,11 @@ impl AdjustmentPanel {
         is_editing_value: bool,
         input_string: &str,
     ) {
-        let main_block = Block::default().borders(Borders::ALL).border_type(BorderType::Rounded).title("Adjustments");
+        let main_block = Block::default()
+            .borders(Borders::ALL)
+            .border_type(BorderType::Rounded)
+            .border_style(STYLES.border)
+            .title(" Adjustments ");
 
         let inner_area = main_block.inner(area);
         frame.render_widget(main_block, area);
@@ -145,7 +154,7 @@ impl AdjustmentPanel {
             .sliders
             .iter()
             .map(|_| Constraint::Length(3))
-            .collect::<Vec<_>>(); // Each slider needs more height for label and bar
+            .collect::<Vec<_>>();
 
         let chunks = Layout::default()
             .direction(Direction::Vertical)
@@ -156,38 +165,15 @@ impl AdjustmentPanel {
             let chunk = chunks[i];
             let is_selected = i == self.selected_slider;
 
-            let display_value = if is_selected && is_editing_value {
-                input_string.to_string()
-            } else {
-                format!("{:.0}", slider.value)
-            };
+            let render_slider = slider.clone().focused(is_selected);
 
-            let label_with_value = format!("{}: {}", slider.label, display_value);
-
-            let render_slider = Slider::new(&slider.label, slider.value, slider.min, slider.max)
-                .style(if is_selected {
-                    ratatui::style::Style::default()
-                        .fg(ratatui::style::Color::Yellow)
-                        .add_modifier(ratatui::style::Modifier::BOLD)
-                } else {
-                    ratatui::style::Style::default()
-                });
-
-            // We need a way to show the input string.
-            // Let's modify Slider's render to optionally take an override for the value display.
-            // Or just render it here manually?
-            // Actually, Slider::render renders the label and value at the top.
-            // If I change the label to include the value when editing, it might look weird because Slider also renders the value.
-            // Let's look at Slider::render again.
-            render_slider.render(chunk, frame.buffer_mut());
+            frame.render_widget(render_slider, chunk);
 
             if is_selected && is_editing_value {
                 // Overlay the input string over the value area
                 let value_span = ratatui::text::Span::styled(
-                    format!("__{}__", input_string),
-                    ratatui::style::Style::default()
-                        .fg(ratatui::style::Color::Magenta)
-                        .add_modifier(ratatui::style::Modifier::BOLD),
+                    format!("_{}_", input_string),
+                    STYLES.accent.add_modifier(ratatui::style::Modifier::BOLD),
                 );
                 let value_width = value_span.width() as u16;
                 let value_x = chunk.right().saturating_sub(value_width);
