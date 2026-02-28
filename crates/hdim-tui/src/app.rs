@@ -7,6 +7,7 @@ use hdim_core::{
     exif::ExifData,
     state::{CropState, Tool},
 };
+use image::DynamicImage;
 use std::{
     fs::File,
     time::{Duration, Instant},
@@ -33,6 +34,8 @@ pub enum AppMode {
 pub struct App {
     /// We store the wrapper HdimImage so we can re-render it and access metadata
     pub hdim_image: HdimImage,
+    /// Cached version of the image with adjustments applied
+    pub cached_image: DynamicImage,
     /// The top-left corner of the viewport on the source image (x, y) in pixels.
     pub source_pos: (u32, u32),
     /// Zoom level. Represents `source_pixels / terminal_characters`.
@@ -69,15 +72,17 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(mut hdim_image: HdimImage, initial_zoom: f32) -> Result<Self> {
+    pub fn new(hdim_image: HdimImage, initial_zoom: f32) -> Result<Self> {
         let mut file = File::open(hdim_image.path.clone())?;
         let exif_data = ExifData::get_exif_data(&mut file).ok();
         let exif_view = exif_data.as_ref().map(ExifView::new);
 
         let adjustment_panel = AdjustmentPanel::new(hdim_image.adjustments);
+        let cached_image = hdim_image.apply_adjustments();
 
         Ok(Self {
             hdim_image,
+            cached_image,
             source_pos: (0, 0),
             zoom: initial_zoom,
             last_input_time: Instant::now(),
@@ -124,6 +129,12 @@ impl App {
         if self.source_pos.1 > image_height {
             self.source_pos.1 = image_height;
         }
+    }
+
+    /// Updates the image adjustments and invalidates the cache
+    pub fn update_adjustments(&mut self) {
+        self.hdim_image.adjustments = self.adjustment_panel.get_adjustments();
+        self.cached_image = self.hdim_image.apply_adjustments();
     }
 
     /// Calculates the viewport dimensions and clamps the source position.
