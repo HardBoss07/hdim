@@ -49,6 +49,58 @@ pub fn handle_events(app: &mut App) -> Result<bool> {
 fn handle_key_press(app: &mut App, key: KeyEvent) {
     let pan_amount_pixels = (PAN_AMOUNT_CHARACTERS as f32 * app.zoom).round() as i32;
 
+    // Global tool switching (available in most modes except Saving)
+    if app.mode != AppMode::Saving {
+        match key.code {
+            KeyCode::Char('1') => {
+                app.selected_tool = Some(Tool::Crop);
+                app.active_widget = ActiveWidget::RightToolbar;
+                app.mode = AppMode::Normal;
+                app.show_right_toolbar = true;
+                return;
+            }
+            KeyCode::Char('2') => {
+                app.selected_tool = Some(Tool::Exif);
+                app.mode = AppMode::ExifView;
+                app.active_widget = ActiveWidget::RightToolbar;
+                app.show_right_toolbar = true;
+                if let Some(exif_view) = &mut app.exif_view {
+                    exif_view.state.select(Some(0));
+                }
+                return;
+            }
+            KeyCode::Char('s') | KeyCode::Char('3') => {
+                app.mode = AppMode::Saving;
+                let original_filename = app
+                    .hdim_image
+                    .path
+                    .file_stem()
+                    .map(|s| s.to_string_lossy().into_owned())
+                    .unwrap_or_default();
+                app.save_as.set_initial_filename(&original_filename);
+                return;
+            }
+            KeyCode::Char('4') => {
+                app.active_widget = ActiveWidget::Adjustments;
+                app.selected_tool = None;
+                app.mode = AppMode::Normal;
+                app.show_right_toolbar = true;
+                return;
+            }
+            KeyCode::Esc
+                if app.mode != AppMode::EditingAdjustmentValue
+                    && app.mode != AppMode::EditingCropValue =>
+            {
+                app.selected_tool = None;
+                app.active_widget = ActiveWidget::Main;
+                app.mode = AppMode::Normal;
+                app.show_right_toolbar = false;
+                return;
+            }
+            _ => {}
+        }
+    }
+
     match app.mode {
         AppMode::ExifView => match key.code {
             KeyCode::Up => {
@@ -64,6 +116,7 @@ fn handle_key_press(app: &mut App, key: KeyEvent) {
             KeyCode::Esc => {
                 app.mode = AppMode::Normal;
                 app.active_widget = ActiveWidget::Main;
+                app.show_right_toolbar = false;
             }
             _ => {}
         },
@@ -81,8 +134,8 @@ fn handle_key_press(app: &mut App, key: KeyEvent) {
                     app.adjustment_panel
                         .update_selected_slider_value(clamped_value);
 
-                    let new_adjustments = app.adjustment_panel.get_adjustments();
-                    app.hdim_image.adjustments = new_adjustments;
+                    app.update_adjustments();
+                    let new_adjustments = app.hdim_image.adjustments;
                     app.hdim_image.history.record_adjustments(new_adjustments);
                 }
                 app.adjustment_input.clear();
@@ -120,77 +173,38 @@ fn handle_key_press(app: &mut App, key: KeyEvent) {
             }
             _ => {}
         },
-        AppMode::Saving => {
-            match key.code {
-                KeyCode::Up => app.save_as.on_up(),
-                KeyCode::Down => app.save_as.on_down(),
-                KeyCode::Left => app.save_as.on_left(),
-                KeyCode::Right => app.save_as.on_right(),
-                KeyCode::Backspace => app.save_as.on_backspace(),
-                KeyCode::Delete => app.save_as.on_delete(),
-                KeyCode::Char(c) => app.save_as.on_char(c),
-                KeyCode::Esc => {
-                    app.mode = AppMode::Normal;
-                }
-                KeyCode::Enter => {
-                    let file_name = app.save_as.file_name();
-                    let format = app.save_as.selected_format();
-                    let output_format = format.to_image_format();
-
-                    let adjusted_image = app.hdim_image.apply_adjustments();
-
-                    let output_path =
-                        PathBuf::from(format!("{}.{}", file_name, format.extension()));
-                    match adjusted_image.save_with_format(&output_path, output_format) {
-                        Ok(_) => {
-                            // Optionally, provide feedback to the user that save was successful
-                            // For now, just switch back to normal mode
-                        }
-                        Err(e) => {
-                            // Handle save error, e.g., display error message
-                            eprintln!("Error saving image: {:?}", e);
-                        }
-                    }
-                    app.mode = AppMode::Normal;
-                }
-                _ => {}
-            }
-        }
-        AppMode::Normal => match key.code {
-            KeyCode::Char('q') => {
-                // This is now handled in the main loop for a more responsive exit.
-            }
-            KeyCode::Char('1') => {
-                app.selected_tool = Some(Tool::Crop);
-                app.active_widget = ActiveWidget::RightToolbar;
-            }
-            KeyCode::Char('2') => {
-                app.selected_tool = Some(Tool::Exif);
-                app.mode = AppMode::ExifView;
-                app.active_widget = ActiveWidget::RightToolbar;
-                if let Some(exif_view) = &mut app.exif_view {
-                    exif_view.state.select(Some(0));
-                }
-            }
-            KeyCode::Char('s') | KeyCode::Char('3') => {
-                // New keybinding for Save As
-                app.mode = AppMode::Saving;
-                let original_filename = app
-                    .hdim_image
-                    .path
-                    .file_stem()
-                    .map(|s| s.to_string_lossy().into_owned())
-                    .unwrap_or_default();
-                app.save_as.set_initial_filename(&original_filename);
-            }
-            KeyCode::Char('4') => {
-                // Keybinding for Adjustments
-                app.active_widget = ActiveWidget::Adjustments;
-            }
+        AppMode::Saving => match key.code {
+            KeyCode::Up => app.save_as.on_up(),
+            KeyCode::Down => app.save_as.on_down(),
+            KeyCode::Left => app.save_as.on_left(),
+            KeyCode::Right => app.save_as.on_right(),
+            KeyCode::Backspace => app.save_as.on_backspace(),
+            KeyCode::Delete => app.save_as.on_delete(),
+            KeyCode::Char(c) => app.save_as.on_char(c),
             KeyCode::Esc => {
-                app.selected_tool = None;
-                app.active_widget = ActiveWidget::Main;
+                app.mode = AppMode::Normal;
             }
+            KeyCode::Enter => {
+                let file_name = app.save_as.file_name();
+                let format = app.save_as.selected_format();
+                let output_format = format.to_image_format();
+
+                let output_path = PathBuf::from(format!("{}.{}", file_name, format.extension()));
+                match app
+                    .cached_image
+                    .save_with_format(&output_path, output_format)
+                {
+                    Ok(_) => {}
+                    Err(e) => {
+                        eprintln!("Error saving image: {:?}", e);
+                    }
+                }
+                app.mode = AppMode::Normal;
+            }
+            _ => {}
+        },
+        AppMode::Normal => match key.code {
+            KeyCode::Char('q') => {}
             _ => {
                 if let Some(Tool::Crop) = app.selected_tool {
                     handle_crop_events(key, app);
@@ -208,28 +222,28 @@ fn handle_key_press(app: &mut App, key: KeyEvent) {
                         ActiveWidget::Adjustments => {
                             if let Some(change) = app.adjustment_panel.handle_event(key) {
                                 match change {
-                                    AdjustmentsChange::Updated(new_adjustments) => {
-                                        app.hdim_image.adjustments = new_adjustments;
-                                        app.hdim_image.history.record_adjustments(new_adjustments);
+                                    AdjustmentsChange::Updated(_) => {
+                                        app.update_adjustments();
+                                        app.hdim_image
+                                            .history
+                                            .record_adjustments(app.hdim_image.adjustments);
                                     }
-                                    AdjustmentsChange::Undo(_adjustments) => {
-                                        // _adjustments is current state from panel, not prev
+                                    AdjustmentsChange::Undo(_) => {
                                         if let Some(prev_adjustments) =
                                             app.hdim_image.history.undo()
                                         {
-                                            app.hdim_image.adjustments = prev_adjustments;
                                             app.adjustment_panel
                                                 .update_sliders_from_adjustments(prev_adjustments);
+                                            app.update_adjustments();
                                         }
                                     }
-                                    AdjustmentsChange::Redo(_adjustments) => {
-                                        // _adjustments is current state from panel, not next
+                                    AdjustmentsChange::Redo(_) => {
                                         if let Some(next_adjustments) =
                                             app.hdim_image.history.redo()
                                         {
-                                            app.hdim_image.adjustments = next_adjustments;
                                             app.adjustment_panel
                                                 .update_sliders_from_adjustments(next_adjustments);
+                                            app.update_adjustments();
                                         }
                                     }
                                     AdjustmentsChange::EnterPressed => {
