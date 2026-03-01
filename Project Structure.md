@@ -30,8 +30,10 @@ hdim/
 │   │   │   ├── history/
 │   │   │   │   ├── history.rs
 │   │   │   │   └── mod.rs
+│   │   │   ├── consts.rs
 │   │   │   ├── lib.rs
-│   │   │   └── state.rs
+│   │   │   ├── state.rs
+│   │   │   └── utils.rs
 │   │   ├── tests/
 │   │   │   └── resizing.rs
 │   │   └── Cargo.toml
@@ -66,6 +68,10 @@ hdim/
 │       │   │   ├── exif_view.rs
 │       │   │   ├── mod.rs
 │       │   │   └── save_as.rs
+│       │   ├── theme/
+│       │   │   ├── colors.rs
+│       │   │   ├── mod.rs
+│       │   │   └── style.rs
 │       │   ├── app.rs
 │       │   ├── events.rs
 │       │   ├── main.rs
