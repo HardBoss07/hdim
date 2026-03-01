@@ -1,7 +1,7 @@
 use hdim_core::exif::ExifData;
 use ratatui::{
     prelude::*,
-    widgets::{Block, Borders, BorderType, List, ListItem, ListState},
+    widgets::{Block, BorderType, Borders, List, ListItem, ListState},
 };
 
 pub struct ExifView {
@@ -126,7 +126,12 @@ impl ExifView {
 
     pub fn widget(&self) -> List<'static> {
         List::new(self.items.clone())
-            .block(Block::default().borders(Borders::ALL).border_type(BorderType::Rounded).title("EXIF Data"))
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .border_type(BorderType::Rounded)
+                    .title("EXIF Data"),
+            )
             .highlight_style(Style::default().add_modifier(Modifier::REVERSED))
     }
 }
