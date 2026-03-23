@@ -57,21 +57,14 @@ fn render_top_nav(frame: &mut Frame, app: &App, area: Rect) {
 }
 
 fn render_main_section(frame: &mut Frame, app: &mut App, area: Rect) {
-    let right_width = if app.selected_tool.is_some()
-        || app.active_widget == ActiveWidget::Adjustments
-        || app.mode == AppMode::ExifView
-    {
-        32
-    } else {
-        0
-    };
+    let right_width = calculate_sidebar_width(app);
 
     let main_layout = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([
-            Constraint::Length(18),          // Reduced left sidebar (from 24)
-            Constraint::Min(0),              // Center (Image)
-            Constraint::Length(right_width), // Dynamic right sidebar
+            Constraint::Length(18),
+            Constraint::Min(0),
+            Constraint::Length(right_width),
         ])
         .split(area);
 
@@ -79,6 +72,17 @@ fn render_main_section(frame: &mut Frame, app: &mut App, area: Rect) {
     render_image_window(frame, app, main_layout[1]);
     if right_width > 0 {
         render_right_sidebar(frame, app, main_layout[2]);
+    }
+}
+
+fn calculate_sidebar_width(app: &App) -> u16 {
+    if app.selected_tool.is_some()
+        || app.active_widget == ActiveWidget::Adjustments
+        || app.mode == AppMode::ExifView
+    {
+        32
+    } else {
+        0
     }
 }
 
@@ -93,10 +97,11 @@ fn render_left_sidebar(frame: &mut Frame, app: &App, area: Rect) {
     let items: Vec<ListItem> = tools
         .into_iter()
         .map(|(key, name, _tool)| {
-            let style = if (app.active_widget == ActiveWidget::Tools) || 
-                           (name == "Adjust" && app.active_widget == ActiveWidget::Adjustments) ||
-                           (name == "Metadata" && app.mode == AppMode::ExifView) ||
-                           (name == "Crop" && app.selected_tool == Some(Tool::Crop)) {
+            let style = if (app.active_widget == ActiveWidget::Tools)
+                || (name == "Adjust" && app.active_widget == ActiveWidget::Adjustments)
+                || (name == "Metadata" && app.mode == AppMode::ExifView)
+                || (name == "Crop" && app.selected_tool == Some(Tool::Crop))
+            {
                 STYLES.highlight
             } else {
                 Style::default().fg(THEME.foreground).bg(THEME.background)
@@ -144,7 +149,10 @@ fn render_image_window(frame: &mut Frame, app: &mut App, area: Rect) {
         .padding(Padding::uniform(0))
         .border_style(STYLES.border);
 
-    frame.render_widget(Paragraph::new(image_text).block(block).style(STYLES.base), area);
+    frame.render_widget(
+        Paragraph::new(image_text).block(block).style(STYLES.base),
+        area,
+    );
 }
 
 fn render_right_sidebar(frame: &mut Frame, app: &mut App, area: Rect) {
@@ -158,41 +166,54 @@ fn render_right_sidebar(frame: &mut Frame, app: &mut App, area: Rect) {
         .border_style(STYLES.border)
         .padding(Padding::uniform(1));
 
-
     let inner_area = block.inner(area);
     frame.render_widget(block, area);
 
     match app.active_widget {
-        ActiveWidget::Adjustments => {
-            let is_editing = app.mode == AppMode::EditingAdjustmentValue;
-            app.adjustment_panel
-                .render(frame, inner_area, is_editing, &app.adjustment_input);
+        ActiveWidget::Adjustments => render_adjustment_sidebar(frame, app, inner_area),
+        ActiveWidget::RightToolbar | ActiveWidget::Main | ActiveWidget::Tools => {
+            render_tool_sidebar(frame, app, inner_area)
         }
-        ActiveWidget::RightToolbar | ActiveWidget::Main | ActiveWidget::Tools => match app.mode {
-            AppMode::ExifView => {
-                if let Some(exif_view) = &mut app.exif_view {
-                    let mut list = exif_view.widget();
-                    list = list.highlight_style(STYLES.highlight).block(
-                        Block::default()
-                            .title(" METADATA ")
-                            .title_style(STYLES.text_dim),
-                    );
-                    frame.render_stateful_widget(list, inner_area, &mut exif_view.state);
-                }
-            }
-            _ => {
-                if let Some(Tool::Crop) = app.selected_tool {
-                    frame.render_widget(render_crop_options(app), inner_area);
-                } else {
-                    let placeholder = Paragraph::new("Select a tool to begin editing")
-                        .style(STYLES.text_dim)
-                        .alignment(Alignment::Center)
-                        .block(Block::default().padding(Padding::top(inner_area.height / 2)));
-                    frame.render_widget(placeholder, inner_area);
-                }
-            }
-        },
     }
+}
+
+fn render_adjustment_sidebar(frame: &mut Frame, app: &mut App, area: Rect) {
+    let is_editing = app.mode == AppMode::EditingAdjustmentValue;
+    app.adjustment_panel
+        .render(frame, area, is_editing, &app.adjustment_input);
+}
+
+fn render_tool_sidebar(frame: &mut Frame, app: &mut App, area: Rect) {
+    match app.mode {
+        AppMode::ExifView => render_exif_sidebar(frame, app, area),
+        _ => {
+            if let Some(Tool::Crop) = app.selected_tool {
+                frame.render_widget(render_crop_options(app), area);
+            } else {
+                render_sidebar_placeholder(frame, area);
+            }
+        }
+    }
+}
+
+fn render_exif_sidebar(frame: &mut Frame, app: &mut App, area: Rect) {
+    if let Some(exif_view) = &mut app.exif_view {
+        let mut list = exif_view.widget();
+        list = list.highlight_style(STYLES.highlight).block(
+            Block::default()
+                .title(" METADATA ")
+                .title_style(STYLES.text_dim),
+        );
+        frame.render_stateful_widget(list, area, &mut exif_view.state);
+    }
+}
+
+fn render_sidebar_placeholder(frame: &mut Frame, area: Rect) {
+    let placeholder = Paragraph::new("Select a tool to begin editing")
+        .style(STYLES.text_dim)
+        .alignment(Alignment::Center)
+        .block(Block::default().padding(Padding::top(area.height / 2)));
+    frame.render_widget(placeholder, area);
 }
 
 fn render_status_line(frame: &mut Frame, app: &App, area: Rect) {
@@ -210,13 +231,7 @@ fn render_status_line(frame: &mut Frame, app: &App, area: Rect) {
     };
 
     let status_line = Line::from(vec![
-        Span::styled(
-            mode_str,
-            Style::default()
-                .bg(THEME.accent)
-                .fg(THEME.background)
-                .add_modifier(Modifier::BOLD),
-        ),
+        Span::styled(mode_str, STYLES.inverted),
         Span::raw(" "),
         Span::styled(hint, STYLES.text_dim),
         Span::raw(" "),
