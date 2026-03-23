@@ -72,43 +72,53 @@ impl HdimImage {
         let adj = self.adjustments;
 
         // Order of application matters
-        if adj.exposure != 0.0 {
-            adjusted_image = adjustments::exposure::apply_exposure(&adjusted_image, adj.exposure);
-        }
-        if adj.warmth != 0.0 {
-            adjusted_image = adjustments::warmth::apply_warmth(&adjusted_image, adj.warmth);
-        }
-        if adj.contrast != 0.0 {
-            adjusted_image = adjustments::contrast::apply_contrast(&adjusted_image, adj.contrast);
-        }
-        // Vibrance and Saturation might interact, applying them sequentially
-        // or choosing one over the other if both are non-zero.
-        // For now, apply both if set.
-        if adj.vibrance != 0.0 {
-            adjusted_image = adjustments::vibrance::apply_vibrance(&adjusted_image, adj.vibrance);
-        }
-        if adj.saturation != 0.0 {
-            adjusted_image =
-                adjustments::saturation::apply_saturation(&adjusted_image, adj.saturation);
-        }
-        if adj.hue != 0.0 {
-            adjusted_image = adjustments::hue::apply_hue(&adjusted_image, adj.hue);
-        }
-        if adj.brightness != 0.0 {
-            adjusted_image =
-                adjustments::brightness::apply_brightness(&adjusted_image, adj.brightness);
-        }
-        if adj.fade != 0.0 {
-            adjusted_image = adjustments::fade::apply_fade(&adjusted_image, adj.fade);
-        }
-        if adj.grain != 0.0 {
-            adjusted_image = adjustments::grain::apply_grain(&adjusted_image, adj.grain);
-        }
-        if adj.noise != 0.0 {
-            adjusted_image = adjustments::noise::apply_noise(&adjusted_image, adj.noise);
-        }
+        adjusted_image = self.apply_light_adjustments(adjusted_image, &adj);
+        adjusted_image = self.apply_color_adjustments(adjusted_image, &adj);
+        adjusted_image = self.apply_effect_adjustments(adjusted_image, &adj);
 
         adjusted_image
+    }
+
+    fn apply_light_adjustments(&self, mut image: DynamicImage, adj: &Adjustments) -> DynamicImage {
+        if adj.exposure != 0.0 {
+            image = adjustments::exposure::apply_exposure(&image, adj.exposure);
+        }
+        if adj.brightness != 0.0 {
+            image = adjustments::brightness::apply_brightness(&image, adj.brightness);
+        }
+        if adj.contrast != 0.0 {
+            image = adjustments::contrast::apply_contrast(&image, adj.contrast);
+        }
+        image
+    }
+
+    fn apply_color_adjustments(&self, mut image: DynamicImage, adj: &Adjustments) -> DynamicImage {
+        if adj.warmth != 0.0 {
+            image = adjustments::warmth::apply_warmth(&image, adj.warmth);
+        }
+        if adj.vibrance != 0.0 {
+            image = adjustments::vibrance::apply_vibrance(&image, adj.vibrance);
+        }
+        if adj.saturation != 0.0 {
+            image = adjustments::saturation::apply_saturation(&image, adj.saturation);
+        }
+        if adj.hue != 0.0 {
+            image = adjustments::hue::apply_hue(&image, adj.hue);
+        }
+        image
+    }
+
+    fn apply_effect_adjustments(&self, mut image: DynamicImage, adj: &Adjustments) -> DynamicImage {
+        if adj.fade != 0.0 {
+            image = adjustments::fade::apply_fade(&image, adj.fade);
+        }
+        if adj.grain != 0.0 {
+            image = adjustments::grain::apply_grain(&image, adj.grain);
+        }
+        if adj.noise != 0.0 {
+            image = adjustments::noise::apply_noise(&image, adj.noise);
+        }
+        image
     }
 }
 
