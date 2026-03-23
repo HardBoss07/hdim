@@ -76,9 +76,9 @@ The workspace is defined in the root `Cargo.toml`.
 
 ### Phase 2: Rendering & Basic TUI
 
-- [ ] **hdim-tui**: Integrate `hdim-render` logic into `ui.rs` to display the image.
-- [ ] **hdim-tui**: Connect `exif_view.rs` to the render loop.
-- [ ] **hdim-render**: Optimize rendering for high-res images (downscaling strategies).
+- [x] **hdim-tui**: Integrate `hdim-render` logic into `ui.rs` to display the image.
+- [x] **hdim-tui**: Connect `exif_view.rs` to the render loop.
+- [x] **hdim-render**: Optimize rendering for high-res images (downscaling strategies).
 
 ### Phase 3: Manipulation Components
 
