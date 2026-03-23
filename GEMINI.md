@@ -141,12 +141,6 @@ The following suite of tools—inspired by standard mobile editors—must be imp
 - **Formatting:** Strictly run `cargo fmt` on every change.
 - **Snapshots:** When changing rendering logic, run `cargo insta review` to accept/reject snapshot changes.
 - **Errors:** Use `color-eyre` for pretty panics in the binary, `thiserror` for internal library errors.
-- **Args:** Minimal parsing; expecting only `[IMAGE_PATH]` via `std::env::args`.
-
-## Coding Standards (Updated)
-
-- **Formatting:** Strictly run `cargo fmt` on every change.
-- **Snapshots:** When changing rendering logic, run `cargo insta review` to accept/reject snapshot changes.
-- **Errors:** Use `color-eyre` for pretty panics in the binary, `thiserror` for internal library errors.
 - **Tool Retention:** Existing tools and features must not be removed when adding new adjustments. All legacy manipulation logic must remain functional or be refactored to support the new slider system.
+- **Functional Atomicity:** Functions should be designed to perform a single, atomic task. Avoid "God functions." If a public function or UI render method becomes complex, decompose the logic into private helper functions. This ensures the code remains testable and readable without enforcing arbitrary line-count limits.
 - **Args:** Minimal parsing; expecting only `[IMAGE_PATH]` via `std::env::args`.
