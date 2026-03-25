@@ -110,6 +110,27 @@ The workspace is defined in the root `Cargo.toml`.
 - [x] **Film Grain**
 - [x] **Noise**
 
+### Phase 6: UI/UX Refinements & Safety
+
+- [x] **hdim-tui**: Change quit keybind from `q` to `Ctrl+q`.
+- [x] **hdim-tui**: Implement a warning popup before exiting if there are unsaved changes.
+- [x] **hdim-tui**: Enforce a hard zoom limit of 2x to prevent rendering breakdowns.
+- [x] **hdim-tui**: Clean up `theme.rs` by implementing the currently unused fields or removing them entirely.
+
+### Phase 7: Configuration & Localization
+
+- [x] **hdim-core**: Architect a strongly defined localization sub-module. Create a uniform base type for all application text.
+- [x] **hdim-core**: Implement English (Default) and German language structs using the uniform type.
+- [x] **hdim-tui**: Create a persistent configuration file system.
+- [x] **hdim-tui**: Build a Settings UI to allow users to switch themes and select their preferred language.
+
+### Phase 8: Export Polish & Adjustment Tweaks
+
+- [ ] **hdim-core**: Overhaul EXIF data handling on export to optionally strip sensitive/unnecessary data (GPS, Camera models, Dates) while preserving essential dimensions (Width/Height).
+- [ ] **hdim-core**: Refine **Noise** slider logic to exclusively add random RGB noise.
+- [ ] **hdim-core**: Refine **Film Grain** slider logic to exclusively add random gray/luminance noise.
+- [ ] **Documentation**: Adjust the modifier values and tool descriptions in the `GEMINI.md` README to reflect these new constraints/updating the old ones since some go from 0-100.
+
 ## Tools (Translation & Reference)
 
 The following suite of tools—inspired by standard mobile editors—must be implemented within the `hdim-core` manipulation logic and exposed via `hdim-tui` sliders:
