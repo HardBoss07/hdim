@@ -30,6 +30,10 @@ hdim/
 │   │   │   ├── history/
 │   │   │   │   ├── history.rs
 │   │   │   │   └── mod.rs
+│   │   │   ├── localization/
+│   │   │   │   ├── de.rs
+│   │   │   │   ├── en.rs
+│   │   │   │   └── mod.rs
 │   │   │   ├── consts.rs
 │   │   │   ├── lib.rs
 │   │   │   ├── state.rs
@@ -67,12 +71,14 @@ hdim/
 │       │   │   ├── crop.rs
 │       │   │   ├── exif_view.rs
 │       │   │   ├── mod.rs
-│       │   │   └── save_as.rs
+│       │   │   ├── save_as.rs
+│       │   │   └── settings.rs
 │       │   ├── theme/
 │       │   │   ├── colors.rs
 │       │   │   ├── mod.rs
 │       │   │   └── style.rs
 │       │   ├── app.rs
+│       │   ├── config.rs
 │       │   ├── events.rs
 │       │   ├── main.rs
 │       │   └── ui.rs

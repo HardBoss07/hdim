@@ -9,6 +9,7 @@ pub mod consts;
 #[cfg(feature = "exif")]
 pub mod exif;
 pub mod history;
+pub mod localization;
 pub mod state;
 pub mod utils;
 use crate::history::history::History;

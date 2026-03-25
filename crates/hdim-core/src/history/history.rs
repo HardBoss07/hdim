@@ -91,4 +91,9 @@ impl History {
     pub fn current_adjustments(&self) -> Adjustments {
         self.states[self.current_index]
     }
+
+    /// Returns the current index in the history stack.
+    pub fn current_index(&self) -> usize {
+        self.current_index
+    }
 }
