@@ -1,101 +1,127 @@
 use hdim_core::exif::ExifData;
+use hdim_core::localization::Exif as ExifLocalization;
 use ratatui::{
     prelude::*,
-    widgets::{Block, BorderType, Borders, List, ListItem, ListState},
+    widgets::{List, ListItem, ListState},
 };
 
 pub struct ExifView {
+    pub exif_data: ExifData,
     pub state: ListState,
-    items: Vec<ListItem<'static>>,
 }
 
 impl ExifView {
     pub fn new(exif_data: &ExifData) -> Self {
+        Self {
+            exif_data: exif_data.clone(),
+            state: ListState::default(),
+        }
+    }
+
+    pub fn widget<'a>(&self, loc: &'a ExifLocalization) -> List<'a> {
         let mut items = Vec::new();
-        items.push(ListItem::new("General:").style(Style::default().add_modifier(Modifier::BOLD)));
-        if let Some(datetime) = &exif_data.datetime {
+
+        // General Info
+        items.push(
+            ListItem::new(loc.general.clone()).style(Style::default().add_modifier(Modifier::BOLD)),
+        );
+        if let Some(datetime) = &self.exif_data.datetime {
             if let Some(original) = &datetime.original {
-                items.push(ListItem::new(format!("  Date Time: {}", original)));
+                items.push(ListItem::new(format!("{}{}", loc.date_time, original)));
             }
         }
 
-        if let Some(camera) = &exif_data.camera {
-            items.push(
-                ListItem::new("Camera:").style(Style::default().add_modifier(Modifier::BOLD)),
-            );
+        // Camera Info
+        items.push(
+            ListItem::new(loc.camera.clone()).style(Style::default().add_modifier(Modifier::BOLD)),
+        );
+        if let Some(camera) = &self.exif_data.camera {
             if let Some(make) = &camera.make {
-                items.push(ListItem::new(format!("  Make: {}", make)));
+                items.push(ListItem::new(format!("{}{}", loc.make, make)));
             }
             if let Some(model) = &camera.model {
-                items.push(ListItem::new(format!("  Model: {}", model)));
+                items.push(ListItem::new(format!("{}{}", loc.model, model)));
             }
             if let Some(software) = &camera.software {
-                items.push(ListItem::new(format!("  Software: {}", software)));
+                items.push(ListItem::new(format!("{}{}", loc.software, software)));
             }
         }
 
-        if let Some(exposure) = &exif_data.exposure {
-            items.push(
-                ListItem::new("Exposure:").style(Style::default().add_modifier(Modifier::BOLD)),
-            );
-            if let Some(exposure_time) = exposure.exposure_time {
-                items.push(ListItem::new(format!("  Exposure Time: {}", exposure_time)));
+        // Exposure Info
+        items.push(
+            ListItem::new(loc.exposure.clone())
+                .style(Style::default().add_modifier(Modifier::BOLD)),
+        );
+        if let Some(exposure) = &self.exif_data.exposure {
+            if let Some(exposure_time) = &exposure.exposure_time {
+                items.push(ListItem::new(format!(
+                    "{}{}",
+                    loc.exposure_time, exposure_time
+                )));
             }
-            if let Some(f_number) = exposure.f_number {
-                items.push(ListItem::new(format!("  F Number: {}", f_number)));
+            if let Some(f_number) = &exposure.f_number {
+                items.push(ListItem::new(format!("{}{}", loc.f_number, f_number)));
             }
-            if let Some(iso) = exposure.iso {
-                items.push(ListItem::new(format!("  ISO: {}", iso)));
+            if let Some(iso) = &exposure.iso {
+                items.push(ListItem::new(format!("{}{}", loc.iso, iso)));
             }
         }
 
-        if let Some(lens) = &exif_data.lens {
-            items.push(ListItem::new("Lens:").style(Style::default().add_modifier(Modifier::BOLD)));
+        // Lens Info
+        items.push(
+            ListItem::new(loc.lens.clone()).style(Style::default().add_modifier(Modifier::BOLD)),
+        );
+        if let Some(lens) = &self.exif_data.lens {
             if let Some(focal_length) = &lens.focal_length {
-                items.push(ListItem::new(format!("  Focal Length: {}", focal_length)));
+                items.push(ListItem::new(format!(
+                    "{}{}",
+                    loc.focal_length, focal_length
+                )));
             }
             if let Some(f_number_range) = &lens.f_number_range {
                 items.push(ListItem::new(format!(
-                    "  F Number Range: {}",
-                    f_number_range
+                    "{}{}",
+                    loc.f_number_range, f_number_range
                 )));
             }
         }
 
-        if let Some(image) = &exif_data.image {
-            items
-                .push(ListItem::new("Image:").style(Style::default().add_modifier(Modifier::BOLD)));
-            if let Some(width) = &image.width {
-                items.push(ListItem::new(format!("  Width: {}", width)));
+        // Image Info
+        items.push(
+            ListItem::new(loc.image.clone()).style(Style::default().add_modifier(Modifier::BOLD)),
+        );
+        if let Some(image) = &self.exif_data.image {
+            if let Some(width) = image.width {
+                items.push(ListItem::new(format!("{}{}", loc.width, width)));
             }
-            if let Some(height) = &image.height {
-                items.push(ListItem::new(format!("  Height: {}", height)));
+            if let Some(height) = image.height {
+                items.push(ListItem::new(format!("{}{}", loc.height, height)));
             }
         }
 
-        if let Some(gps) = &exif_data.gps {
-            items.push(ListItem::new("GPS:").style(Style::default().add_modifier(Modifier::BOLD)));
+        // GPS Info
+        items.push(
+            ListItem::new(loc.gps.clone()).style(Style::default().add_modifier(Modifier::BOLD)),
+        );
+        if let Some(gps) = &self.exif_data.gps {
             if let Some(latitude) = &gps.latitude {
-                items.push(ListItem::new(format!("  Latitude: {}", latitude)));
+                items.push(ListItem::new(format!("{}{}", loc.latitude, latitude)));
             }
             if let Some(longitude) = &gps.longitude {
-                items.push(ListItem::new(format!("  Longitude: {}", longitude)));
+                items.push(ListItem::new(format!("{}{}", loc.longitude, longitude)));
             }
             if let Some(altitude) = &gps.altitude {
-                items.push(ListItem::new(format!("  Altitude: {}", altitude)));
+                items.push(ListItem::new(format!("{}{}", loc.altitude, altitude)));
             }
         }
 
-        Self {
-            state: ListState::default(),
-            items,
-        }
+        List::new(items)
     }
 
     pub fn next(&mut self) {
         let i = match self.state.selected() {
             Some(i) => {
-                if i >= self.items.len() - 1 {
+                if i >= 20 {
                     0
                 } else {
                     i + 1
@@ -110,7 +136,7 @@ impl ExifView {
         let i = match self.state.selected() {
             Some(i) => {
                 if i == 0 {
-                    self.items.len() - 1
+                    20
                 } else {
                     i - 1
                 }
@@ -122,16 +148,5 @@ impl ExifView {
 
     pub fn unselect(&mut self) {
         self.state.select(None);
-    }
-
-    pub fn widget(&self) -> List<'static> {
-        List::new(self.items.clone())
-            .block(
-                Block::default()
-                    .borders(Borders::ALL)
-                    .border_type(BorderType::Rounded)
-                    .title("EXIF Data"),
-            )
-            .highlight_style(Style::default().add_modifier(Modifier::REVERSED))
     }
 }

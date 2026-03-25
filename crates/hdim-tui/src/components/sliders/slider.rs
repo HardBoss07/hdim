@@ -1,92 +1,60 @@
-use crate::theme::{SLIDER_FILL, SLIDER_HANDLE, SLIDER_TRACK, STYLES, THEME};
+use crate::theme::{SLIDER_FILL, SLIDER_HANDLE, SLIDER_TRACK, ThemeStyles};
 use ratatui::{
-    buffer::Buffer,
-    layout::Rect,
-    style::{Modifier, Style},
-    text::Span,
-    widgets::Widget,
+    prelude::*,
+    widgets::{Block, Borders},
 };
 
-#[derive(Clone)]
 pub struct Slider {
     pub label: String,
     pub value: f32,
     pub min: f32,
     pub max: f32,
-    pub is_focused: bool,
 }
 
 impl Slider {
-    pub fn new(label: &str, value: f32, min: f32, max: f32) -> Self {
+    pub fn new(label: String, value: f32, min: f32, max: f32) -> Self {
         Self {
-            label: label.to_string(),
+            label,
             value,
             min,
             max,
-            is_focused: false,
         }
     }
 
-    pub fn focused(mut self, focused: bool) -> Self {
-        self.is_focused = focused;
-        self
+    pub fn increment(&mut self, amount: f32) {
+        self.value = (self.value + amount).min(self.max);
     }
 
-    pub fn set_value(&mut self, value: f32) -> bool {
-        let old_value = self.value;
-        self.value = value.clamp(self.min, self.max);
-        (self.value - old_value).abs() > f32::EPSILON
+    pub fn decrement(&mut self, amount: f32) {
+        self.value = (self.value - amount).max(self.min);
     }
 
-    pub fn increment(&mut self, step: f32) -> bool {
-        self.set_value(self.value + step)
-    }
-
-    pub fn decrement(&mut self, step: f32) -> bool {
-        self.set_value(self.value - step)
-    }
-}
-
-impl Widget for Slider {
-    fn render(self, area: Rect, buf: &mut Buffer) {
-        if area.height < 2 || area.width < 4 {
-            return;
-        }
-
-        let base_style = if self.is_focused {
-            STYLES.accent
+    pub fn render(&self, area: Rect, buf: &mut Buffer, is_selected: bool, styles: &ThemeStyles) {
+        let border_style = if is_selected {
+            styles.border_active
         } else {
-            Style::default().fg(THEME.foreground)
+            styles.border
         };
 
-        // 1. Render Label and Value (Top Row)
-        let label_span = Span::styled(
-            &self.label,
-            if self.is_focused {
-                base_style.add_modifier(Modifier::BOLD)
+        let block = Block::default()
+            .borders(Borders::ALL)
+            .border_style(border_style)
+            .title(self.label.as_str())
+            .title_style(if is_selected {
+                Style::default().add_modifier(Modifier::BOLD)
             } else {
-                Style::default().fg(THEME.muted)
-            },
-        );
-        let value_span = Span::styled(
-            format!("{:.0}", self.value),
-            base_style.add_modifier(Modifier::BOLD),
-        );
+                Style::default()
+            });
 
-        buf.set_span(area.x, area.y, &label_span, label_span.width() as u16);
-        buf.set_span(
-            area.right().saturating_sub(value_span.width() as u16),
-            area.y,
-            &value_span,
-            value_span.width() as u16,
-        );
+        let inner_area = block.inner(area);
+        block.render(area, buf);
 
-        // 2. Render Track (Bottom Row)
-        let track_y = area.y + 1;
-        let track_width = area.width;
-        let percentage = (self.value - self.min) / (self.max - self.min);
-        let handle_pos = (track_width as f32 * percentage).round() as u16;
-        let handle_pos = handle_pos.clamp(0, track_width.saturating_sub(1));
+        // Render slider track
+        let track_y = inner_area.y;
+        let track_width = inner_area.width.saturating_sub(10); // Leave space for value display
+
+        let normalized_value = (self.value - self.min) / (self.max - self.min);
+        let handle_pos = (normalized_value * (track_width as f32 - 1.0)).round() as u16;
 
         for x in 0..track_width {
             let symbol = if x < handle_pos {
@@ -98,18 +66,23 @@ impl Widget for Slider {
             };
 
             let style = if x <= handle_pos {
-                if self.is_focused {
-                    STYLES.accent
-                } else {
-                    Style::default().fg(THEME.foreground)
-                }
+                styles.accent
             } else {
-                Style::default().fg(THEME.surface)
+                styles.text_dim
             };
 
-            buf.get_mut(area.x + x, track_y)
-                .set_symbol(symbol)
-                .set_style(style);
+            buf.cell_mut((area.x + 1 + x, track_y))
+                .map(|cell| cell.set_symbol(symbol).set_style(style));
         }
+
+        // Render value text
+        let value_text = format!("{:.0}", self.value);
+        let value_x = area.x + 1 + track_width + 1;
+        buf.set_string(
+            value_x,
+            track_y,
+            format!("{:>4}", value_text),
+            Style::default().fg(Color::Yellow),
+        );
     }
 }
