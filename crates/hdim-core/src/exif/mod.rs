@@ -1,3 +1,9 @@
+//! EXIF metadata parsing and management.
+//!
+//! This module provides tools to extract, structure, and display EXIF metadata
+//! from image files using the `kamadak-exif` crate. It handles various metadata
+//! categories such as camera settings, GPS coordinates, and lens information.
+
 #![cfg(feature = "exif")]
 pub mod camera;
 pub mod date_time;
