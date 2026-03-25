@@ -1,8 +1,10 @@
 use crate::app::{ActiveWidget, App, AppMode};
 use crate::components::adjustment_panel::AdjustmentsChange;
 use crate::components::crop::handle_crop_events;
+use crate::components::settings::SettingsView;
+use crate::config::Language;
 use color_eyre::eyre::Result;
-use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
+use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 use hdim_core::consts::{PAN_AMOUNT_CHARACTERS, ZOOM_FACTOR};
 use hdim_core::state::Tool;
 use std::path::PathBuf;
@@ -34,9 +36,28 @@ pub fn handle_events(app: &mut App) -> Result<bool> {
 
             if let Some(key) = last_key_event {
                 app.last_input_time = Instant::now();
+
+                // Priority handling for ConfirmQuit mode to avoid other handlers interfering
+                if app.mode == AppMode::ConfirmQuit {
+                    match key.code {
+                        KeyCode::Char('y') | KeyCode::Enter => return Ok(true),
+                        KeyCode::Char('n') | KeyCode::Esc => {
+                            app.mode = AppMode::Normal;
+                            return Ok(false);
+                        }
+                        _ => return Ok(false),
+                    }
+                }
+
                 handle_key_press(app, key);
-                if key.code == KeyCode::Char('q') {
-                    return Ok(true);
+
+                // Global Quit Handler (Ctrl+q)
+                if key.code == KeyCode::Char('q') && key.modifiers.contains(KeyModifiers::CONTROL) {
+                    if app.has_unsaved_changes() {
+                        app.mode = AppMode::ConfirmQuit;
+                    } else {
+                        return Ok(true);
+                    }
                 }
             }
         } else {
@@ -49,8 +70,11 @@ pub fn handle_events(app: &mut App) -> Result<bool> {
 fn handle_key_press(app: &mut App, key: KeyEvent) {
     let pan_amount_pixels = (PAN_AMOUNT_CHARACTERS as f32 * app.zoom).round() as i32;
 
-    // Global tool switching (available in most modes except Saving)
-    if app.mode != AppMode::Saving {
+    // Global tool switching (available in most modes except Saving and ConfirmQuit and Settings)
+    if app.mode != AppMode::Saving
+        && app.mode != AppMode::ConfirmQuit
+        && app.mode != AppMode::Settings
+    {
         match key.code {
             KeyCode::Char('1') => {
                 app.selected_tool = Some(Tool::Crop);
@@ -87,6 +111,11 @@ fn handle_key_press(app: &mut App, key: KeyEvent) {
                 app.show_right_toolbar = true;
                 return;
             }
+            KeyCode::Char('5') => {
+                app.settings_view = Some(SettingsView::new(app));
+                app.mode = AppMode::Settings;
+                return;
+            }
             KeyCode::Esc
                 if app.mode != AppMode::EditingAdjustmentValue
                     && app.mode != AppMode::EditingCropValue =>
@@ -102,6 +131,57 @@ fn handle_key_press(app: &mut App, key: KeyEvent) {
     }
 
     match app.mode {
+        AppMode::ConfirmQuit => {
+            // Handled in handle_events, but required for exhaustiveness
+        }
+        AppMode::Settings => {
+            if let Some(settings_view) = &mut app.settings_view {
+                match key.code {
+                    KeyCode::Up => {
+                        if settings_view.selected_index > 0 {
+                            settings_view.selected_index -= 1;
+                        }
+                    }
+                    KeyCode::Down => {
+                        if settings_view.selected_index < 1 {
+                            // Language and Theme
+                            settings_view.selected_index += 1;
+                        }
+                    }
+                    KeyCode::Left | KeyCode::Right => {
+                        if settings_view.selected_index == 0 {
+                            // Toggle language
+                            settings_view.selected_language = match settings_view.selected_language
+                            {
+                                Language::English => Language::German,
+                                Language::German => Language::English,
+                            };
+                        } else if settings_view.selected_index == 1 {
+                            // Toggle theme
+                            settings_view.selected_theme_index =
+                                (settings_view.selected_theme_index + 1) % 2;
+                        }
+                    }
+                    KeyCode::Char('s') | KeyCode::Enter => {
+                        app.config.language = settings_view.selected_language.clone();
+                        app.config.theme = match settings_view.selected_theme_index {
+                            0 => "zinc".to_string(),
+                            1 => "slate".to_string(),
+                            _ => "zinc".to_string(),
+                        };
+                        let _ = app.config.save();
+                        app.refresh_localization();
+                        app.mode = AppMode::Normal;
+                        app.settings_view = None;
+                    }
+                    KeyCode::Esc => {
+                        app.mode = AppMode::Normal;
+                        app.settings_view = None;
+                    }
+                    _ => {}
+                }
+            }
+        }
         AppMode::ExifView => match key.code {
             KeyCode::Up => {
                 if let Some(exif_view) = app.exif_view.as_mut() {
@@ -194,7 +274,9 @@ fn handle_key_press(app: &mut App, key: KeyEvent) {
                     .cached_image
                     .save_with_format(&output_path, output_format)
                 {
-                    Ok(_) => {}
+                    Ok(_) => {
+                        app.mark_saved();
+                    }
                     Err(e) => {
                         eprintln!("Error saving image: {:?}", e);
                     }
@@ -204,7 +286,6 @@ fn handle_key_press(app: &mut App, key: KeyEvent) {
             _ => {}
         },
         AppMode::Normal => match key.code {
-            KeyCode::Char('q') => {}
             _ => {
                 if let Some(Tool::Crop) = app.selected_tool {
                     handle_crop_events(key, app);
