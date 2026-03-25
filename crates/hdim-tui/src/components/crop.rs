@@ -1,12 +1,20 @@
 use crate::app::{App, AppMode};
 use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::{
-    prelude::*,
+    layout::Rect,
+    style::Modifier,
     widgets::{Block, BorderType, Borders, List, ListItem},
 };
 
 pub fn render_crop_options<'a>(app: &'a App) -> List<'a> {
-    let crop_options = ["Left", "Right", "Top", "Bottom", "Crop from viewport"];
+    let loc = &app.localization.crop;
+    let crop_options = [
+        loc.left.as_str(),
+        loc.right.as_str(),
+        loc.top.as_str(),
+        loc.bottom.as_str(),
+        loc.from_viewport.as_str(),
+    ];
     let crop_items: Vec<ListItem> = crop_options
         .iter()
         .enumerate()
@@ -30,7 +38,7 @@ pub fn render_crop_options<'a>(app: &'a App) -> List<'a> {
 
             let mut item = ListItem::new(text);
             if app.selected_crop_option_index == i {
-                item = item.style(Style::default().add_modifier(Modifier::REVERSED));
+                item = item.style(app.styles.highlight);
             }
             item
         })
@@ -40,7 +48,8 @@ pub fn render_crop_options<'a>(app: &'a App) -> List<'a> {
         Block::default()
             .borders(Borders::ALL)
             .border_type(BorderType::Rounded)
-            .title("Crop Options"),
+            .border_style(app.styles.border)
+            .title(loc.title.as_str()),
     )
 }
 
@@ -85,6 +94,10 @@ pub fn handle_crop_events(key: KeyEvent, app: &mut App) {
             }
             _ => {}
         },
-        AppMode::ExifView | AppMode::Saving | AppMode::EditingAdjustmentValue => {} // Do nothing in these modes
+        AppMode::ExifView
+        | AppMode::Saving
+        | AppMode::EditingAdjustmentValue
+        | AppMode::ConfirmQuit
+        | AppMode::Settings => {} // Do nothing in these modes
     }
 }

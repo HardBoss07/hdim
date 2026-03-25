@@ -1,11 +1,14 @@
+use crate::theme::ThemeStyles;
+use hdim_core::localization::Export as ExportLocalization;
 use ratatui::{
-    buffer::Buffer,
-    layout::Rect,
-    style::{Modifier, Style},
-    widgets::{Block, Borders, Paragraph, Widget},
+    prelude::*,
+    widgets::{Block, BorderType, Borders, Paragraph},
 };
+use std::fmt;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum ImageFormat {
+    #[default]
     Png,
     Jpeg,
     Gif,
@@ -22,15 +25,6 @@ impl ImageFormat {
         }
     }
 
-    pub fn all() -> &'static [ImageFormat] {
-        &[
-            ImageFormat::Png,
-            ImageFormat::Jpeg,
-            ImageFormat::Gif,
-            ImageFormat::Bmp,
-        ]
-    }
-
     pub fn to_image_format(&self) -> image::ImageFormat {
         match self {
             ImageFormat::Png => image::ImageFormat::Png,
@@ -39,10 +33,19 @@ impl ImageFormat {
             ImageFormat::Bmp => image::ImageFormat::Bmp,
         }
     }
+
+    pub fn all() -> &'static [ImageFormat] {
+        &[
+            ImageFormat::Png,
+            ImageFormat::Jpeg,
+            ImageFormat::Gif,
+            ImageFormat::Bmp,
+        ]
+    }
 }
 
-impl std::fmt::Display for ImageFormat {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for ImageFormat {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             ImageFormat::Png => write!(f, "PNG"),
             ImageFormat::Jpeg => write!(f, "JPEG"),
@@ -52,129 +55,140 @@ impl std::fmt::Display for ImageFormat {
     }
 }
 
-#[derive(Default)]
 pub struct SaveAs {
-    selected_format_index: usize,
-    file_name_input: String,
+    file_name: String,
+    selected_format: ImageFormat,
     cursor_position: usize,
 }
 
 impl SaveAs {
     pub fn new() -> Self {
-        SaveAs {
-            selected_format_index: 0,
-            file_name_input: String::new(),
+        Self {
+            file_name: String::new(),
+            selected_format: ImageFormat::default(),
             cursor_position: 0,
         }
     }
 
     pub fn set_initial_filename(&mut self, name: &str) {
-        self.file_name_input = name.to_string();
-        self.cursor_position = name.len();
-    }
-
-    pub fn selected_format(&self) -> &ImageFormat {
-        &ImageFormat::all()[self.selected_format_index]
+        self.file_name = name.to_string();
+        self.cursor_position = self.file_name.len();
     }
 
     pub fn file_name(&self) -> &str {
-        &self.file_name_input
+        &self.file_name
     }
 
-    pub fn on_up(&mut self) {
-        if self.selected_format_index > 0 {
-            self.selected_format_index -= 1;
-        }
+    pub fn selected_format(&self) -> ImageFormat {
+        self.selected_format
     }
 
-    pub fn on_down(&mut self) {
-        if self.selected_format_index < ImageFormat::all().len() - 1 {
-            self.selected_format_index += 1;
-        }
-    }
-
-    pub fn on_char(&mut self, character: char) {
-        self.file_name_input.insert(self.cursor_position, character);
+    pub fn on_char(&mut self, c: char) {
+        self.file_name.insert(self.cursor_position, c);
         self.cursor_position += 1;
     }
 
     pub fn on_backspace(&mut self) {
         if self.cursor_position > 0 {
+            self.file_name.remove(self.cursor_position - 1);
             self.cursor_position -= 1;
-            self.file_name_input.remove(self.cursor_position);
         }
     }
 
     pub fn on_delete(&mut self) {
-        if self.cursor_position < self.file_name_input.len() {
-            self.file_name_input.remove(self.cursor_position);
+        if self.cursor_position < self.file_name.len() {
+            self.file_name.remove(self.cursor_position);
         }
     }
 
     pub fn on_left(&mut self) {
-        if self.cursor_position > 0 {
-            self.cursor_position -= 1;
-        }
+        self.cursor_position = self.cursor_position.saturating_sub(1);
     }
 
     pub fn on_right(&mut self) {
-        if self.cursor_position < self.file_name_input.len() {
+        if self.cursor_position < self.file_name.len() {
             self.cursor_position += 1;
+        }
+    }
+
+    pub fn on_up(&mut self) {
+        let formats = ImageFormat::all();
+        let current_index = formats
+            .iter()
+            .position(|&f| f == self.selected_format)
+            .unwrap_or(0);
+        let next_index = if current_index == 0 {
+            formats.len() - 1
+        } else {
+            current_index - 1
+        };
+        self.selected_format = formats[next_index];
+    }
+
+    pub fn on_down(&mut self) {
+        let formats = ImageFormat::all();
+        let current_index = formats
+            .iter()
+            .position(|&f| f == self.selected_format)
+            .unwrap_or(0);
+        let next_index = (current_index + 1) % formats.len();
+        self.selected_format = formats[next_index];
+    }
+
+    pub fn widget<'a>(
+        &'a self,
+        loc: &'a ExportLocalization,
+        styles: &'a ThemeStyles,
+    ) -> SaveAsWidget<'a> {
+        SaveAsWidget {
+            state: self,
+            loc,
+            styles,
         }
     }
 }
 
-impl Widget for &SaveAs {
-    fn render(self, area: Rect, buffer: &mut Buffer) {
-        let _block = Block::default()
-            .borders(Borders::ALL)
-            .title(" Save Image As ");
-        buffer.set_string(area.x + 1, area.y + 1, "Select format:", Style::default());
+pub struct SaveAsWidget<'a> {
+    state: &'a SaveAs,
+    loc: &'a ExportLocalization,
+    styles: &'a ThemeStyles,
+}
 
-        let formats_area = Rect::new(
-            area.x + 1,
-            area.y + 2,
-            area.width - 2,
-            ImageFormat::all().len() as u16,
-        );
+impl<'a> Widget for SaveAsWidget<'a> {
+    fn render(self, area: Rect, buf: &mut Buffer) {
+        let layout = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Length(1), // Spacing
+                Constraint::Length(1), // Format selector
+                Constraint::Length(2), // Spacing
+                Constraint::Length(3), // Filename input
+            ])
+            .split(area);
 
-        for (index, format) in ImageFormat::all().iter().enumerate() {
-            let style = if index == self.selected_format_index {
-                Style::default().add_modifier(Modifier::REVERSED)
+        // Render format selector
+        let formats = ImageFormat::all();
+        let mut final_format_spans = vec![Span::raw(format!("{} ", self.loc.select_format))];
+        for f in formats {
+            if *f == self.state.selected_format {
+                final_format_spans.push(Span::styled(format!(" [{}] ", f), self.styles.highlight));
             } else {
-                Style::default()
-            };
-            buffer.set_string(
-                formats_area.x,
-                formats_area.y + index as u16,
-                format.to_string(),
-                style,
-            );
+                final_format_spans.push(Span::raw(format!("  {}  ", f)));
+            }
         }
 
-        let filename_label = "Filename: ";
-        buffer.set_string(
-            area.x + 1,
-            formats_area.y + formats_area.height + 1,
-            filename_label,
-            Style::default(),
+        Paragraph::new(Line::from(final_format_spans)).render(layout[1], buf);
+
+        // Render filename input
+        let filename_label = self.loc.filename.as_str();
+        let input_text = format!("{}{}", filename_label, self.state.file_name);
+        let input_widget = Paragraph::new(input_text).block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded)
+                .border_style(self.styles.border),
         );
 
-        let input_width = area.width.saturating_sub(filename_label.len() as u16 + 2);
-        let input_area = Rect::new(
-            area.x + 1 + filename_label.len() as u16,
-            formats_area.y + formats_area.height + 1,
-            input_width,
-            1,
-        );
-
-        let input_text = self.file_name_input.clone();
-        Paragraph::new(input_text).render(input_area, buffer);
-
-        // Render cursor
-        if input_area.width > 0 {
-            buffer[(input_area.x + self.cursor_position as u16, input_area.y)]
-                .set_style(Style::default().add_modifier(Modifier::REVERSED));
-        }
+        input_widget.render(layout[3], buf);
     }
 }
