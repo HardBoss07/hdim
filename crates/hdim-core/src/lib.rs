@@ -1,3 +1,9 @@
+//! Core logic for High Definition Image Manipulator (hdim).
+//!
+//! This crate provides the foundational data structures and image processing
+//! algorithms used throughout the hdim workspace. It handles image loading,
+//! adjustment state management, and the undo/redo history stack.
+
 pub mod adjustments;
 pub mod consts;
 #[cfg(feature = "exif")]
@@ -10,17 +16,31 @@ use anyhow::Result;
 use image::{DynamicImage, GenericImageView};
 use std::path::{Path, PathBuf};
 
+/// Represents the set of image adjustments that can be applied to a [HdimImage].
+///
+/// All adjustments are stored as `f32` values, typically in the range of -100.0 to 100.0,
+/// although the exact interpretation depends on the specific adjustment implementation.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Adjustments {
+    /// Overall lightness of the image.
     pub brightness: f32,
+    /// Difference between light and dark areas.
     pub contrast: f32,
+    /// Overall light captured in the image.
     pub exposure: f32,
+    /// Reduces contrast in shadows for a "matte" look.
     pub fade: f32,
+    /// Adds simulated analog texture.
     pub grain: f32,
+    /// Shifts the entire color spectrum.
     pub hue: f32,
+    /// Adds digital luminance/chroma noise.
     pub noise: f32,
+    /// Intensity of colors.
     pub saturation: f32,
+    /// Smart saturation that protects skin tones.
     pub vibrance: f32,
+    /// Shift between blue (cool) and yellow (warm) tones.
     pub warmth: f32,
 }
 
@@ -41,17 +61,42 @@ impl Default for Adjustments {
     }
 }
 
+/// The primary image structure used for editing sessions.
+///
+/// `HdimImage` wraps a [DynamicImage] and maintains its adjustment state
+/// and modification history.
 #[derive(Debug, Clone)]
 pub struct HdimImage {
+    /// Original path of the image on disk.
     pub path: PathBuf,
+    /// Raw image data loaded into memory.
     pub data: DynamicImage,
+    /// Width of the image in pixels.
     pub width: u32,
+    /// Height of the image in pixels.
     pub height: u32,
+    /// Current set of adjustments applied to the image.
     pub adjustments: Adjustments,
-    pub history: History, // Refer to it as History
+    /// History of adjustments for undo/redo functionality.
+    pub history: History,
 }
 
 impl HdimImage {
+    /// Creates a new [HdimImage] by loading it from a file path.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the image cannot be opened or decoded by the `image` crate.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use hdim_core::HdimImage;
+    /// use std::path::Path;
+    ///
+    /// let path = Path::new("tests/images/4k.jpg");
+    /// let hdim_image = HdimImage::from_path(path).unwrap();
+    /// ```
     pub fn from_path(path: &Path) -> Result<Self> {
         let data = image::open(path)?;
         let (width, height) = data.dimensions();
@@ -63,10 +108,26 @@ impl HdimImage {
             width,
             height,
             adjustments,
-            history: History::new(adjustments), // Refer to it as History
+            history: History::new(adjustments),
         })
     }
 
+    /// Applies the current set of [Adjustments] to the raw image data.
+    ///
+    /// This method performs a sequential application of light, color, and effect
+    /// transformations, returning a new [DynamicImage].
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// use hdim_core::HdimImage;
+    /// use std::path::Path;
+    ///
+    /// let path = Path::new("tests/images/4k.jpg");
+    /// let mut hdim_image = HdimImage::from_path(path).unwrap();
+    /// hdim_image.adjustments.brightness = 10.0;
+    /// let adjusted = hdim_image.apply_adjustments();
+    /// ```
     pub fn apply_adjustments(&self) -> DynamicImage {
         let mut adjusted_image = self.data.clone();
         let adj = self.adjustments;
@@ -79,6 +140,7 @@ impl HdimImage {
         adjusted_image
     }
 
+    /// Internal helper to apply light-based transformations (exposure, brightness, contrast).
     fn apply_light_adjustments(&self, mut image: DynamicImage, adj: &Adjustments) -> DynamicImage {
         if adj.exposure != 0.0 {
             image = adjustments::exposure::apply_exposure(&image, adj.exposure);
@@ -92,6 +154,7 @@ impl HdimImage {
         image
     }
 
+    /// Internal helper to apply color-based transformations (warmth, vibrance, saturation, hue).
     fn apply_color_adjustments(&self, mut image: DynamicImage, adj: &Adjustments) -> DynamicImage {
         if adj.warmth != 0.0 {
             image = adjustments::warmth::apply_warmth(&image, adj.warmth);
@@ -108,6 +171,7 @@ impl HdimImage {
         image
     }
 
+    /// Internal helper to apply effects (fade, grain, noise).
     fn apply_effect_adjustments(&self, mut image: DynamicImage, adj: &Adjustments) -> DynamicImage {
         if adj.fade != 0.0 {
             image = adjustments::fade::apply_fade(&image, adj.fade);
@@ -122,12 +186,19 @@ impl HdimImage {
     }
 }
 
+/// Simple width and height dimensions.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Size {
+    /// Width in pixels or units.
     pub width: u32,
+    /// Height in pixels or units.
     pub height: u32,
 }
 
+/// Calculates the target dimensions for resizing an image to fit within a maximum size.
+///
+/// It accounts for the non-square aspect ratio of terminal character cells
+/// (approximately 1:2) by doubling the target height.
 pub fn calculate_resize(image: &DynamicImage, max_size: Size) -> Size {
     let (width, height) = image.dimensions();
 
