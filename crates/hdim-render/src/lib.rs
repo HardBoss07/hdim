@@ -1,3 +1,9 @@
+//! High-performance terminal image renderer.
+//!
+//! This crate handles the translation of [DynamicImage] buffers into ANSI escape sequences
+//! suitable for display in a terminal emulator. It uses "half-block" characters (`▄`)
+//! to effectively double the vertical resolution of the terminal grid.
+
 pub mod pixel;
 pub mod view;
 
@@ -8,7 +14,39 @@ use std::fmt::Write;
 use self::pixel::get_average_rgb;
 pub use self::view::View;
 
-/// Renders a portion of an image to a string using half-block characters.
+/// Renders a portion of an image to an ANSI string using half-block characters.
+///
+/// This function maps the source image pixels to terminal cells based on the provided [View].
+/// It calculates the average color for the top and bottom half of each character cell
+/// to determine the foreground and background colors.
+///
+/// # Arguments
+///
+/// * `image` - The source [DynamicImage] to render.
+/// * `view` - The [View] configuration defining the source region and target dimensions.
+///
+/// # Errors
+///
+/// Returns an error if writing to the output string fails (though this is unlikely with `String`).
+///
+/// # Examples
+///
+/// ```no_run
+/// use hdim_render::{render, View};
+/// use image::DynamicImage;
+///
+/// let img = DynamicImage::new_rgba8(100, 100);
+/// let view = View {
+///     source_x: 0,
+///     source_y: 0,
+///     source_width: 100,
+///     source_height: 100,
+///     target_width: 50,
+///     target_height: 25,
+/// };
+/// let output = render(&img, &view).unwrap();
+/// println!("{}", output);
+/// ```
 pub fn render(image: &DynamicImage, view: &View) -> Result<String> {
     let mut output = String::new();
     let (x_ratio, y_ratio) = view.calculate_scaling();
@@ -35,6 +73,7 @@ pub fn render(image: &DynamicImage, view: &View) -> Result<String> {
     Ok(output)
 }
 
+/// Helper to calculate the average RGB values for the top and bottom halves of a character cell.
 fn calculate_cell_colors(
     image: &DynamicImage,
     source_x: u32,
@@ -48,6 +87,7 @@ fn calculate_cell_colors(
     (top_color, bottom_color)
 }
 
+/// Writes a single ANSI-colored half-block character to the output buffer.
 fn write_ansi_cell(output: &mut String, top: [u8; 3], bottom: [u8; 3]) -> Result<()> {
     write!(
         output,

@@ -1,6 +1,27 @@
+//! Pixel manipulation utilities.
+//!
+//! Provides functions for calculating average colors over image regions, essential for
+//! downscaling images to fit the terminal grid.
+
 use image::{DynamicImage, GenericImageView};
 
 /// Calculates the average RGB color for a specific rectangular area of the image.
+///
+/// This function iterates over the pixels within the specified bounds and computes
+/// the arithmetic mean of the Red, Green, and Blue channels.
+///
+/// # Arguments
+///
+/// * `image` - A reference to the input [DynamicImage].
+/// * `start_x` - The top-left X coordinate of the area.
+/// * `start_y` - The top-left Y coordinate of the area.
+/// * `width` - The width of the area to sample.
+/// * `height` - The height of the area to sample.
+///
+/// # Returns
+///
+/// An array `[r, g, b]` representing the average color. Returns `[0, 0, 0]` (black)
+/// if the area contains no pixels or is out of bounds.
 pub fn get_average_rgb(
     image: &DynamicImage,
     start_x: u32,
