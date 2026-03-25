@@ -1,8 +1,35 @@
+//! Noise adjustment.
+//!
+//! Adds random color noise to each RGB channel of the image.
+
 use crate::consts::RNG_SEED;
 use image::{DynamicImage, GenericImage, Rgba};
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 
+/// Applies a noise effect to the image.
+///
+/// This function adds random values to the red, green, and blue channels of each pixel.
+/// It uses a fixed seed [StdRng] to ensure deterministic output for the same input value.
+///
+/// # Arguments
+///
+/// * `image` - A reference to the input [DynamicImage].
+/// * `value` - The noise intensity, typically between 0.0 and 100.0.
+///
+/// # Returns
+///
+/// A new [DynamicImage] with the noise effect applied.
+///
+/// # Examples
+///
+/// ```no_run
+/// use hdim_core::adjustments::noise::apply_noise;
+/// use image::DynamicImage;
+///
+/// let img = DynamicImage::new_rgba8(100, 100);
+/// let adjusted = apply_noise(&img, 15.0);
+/// ```
 pub fn apply_noise(image: &DynamicImage, value: f32) -> DynamicImage {
     if value <= 0.0 {
         return image.clone();

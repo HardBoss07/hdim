@@ -1,3 +1,10 @@
+//! Image adjustment algorithms.
+//!
+//! This module contains the implementation of various image filters and
+//! adjustments, such as brightness, contrast, exposure, and color-specific
+//! transformations. Each sub-module provides an atomic function to apply
+//! its specific transformation to a [image::DynamicImage].
+
 pub mod brightness;
 pub mod contrast;
 pub mod exposure;

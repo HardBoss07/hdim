@@ -1,6 +1,33 @@
+//! Brightness adjustment.
+//!
+//! Increases or decreases the overall lightness of an image.
+
 use image::{DynamicImage, GenericImage, Rgba};
 use palette::{FromColor, Lch, Srgb};
 
+/// Adjusts the overall lightness of an image.
+///
+/// This transformation uses the Lch color space to modify the 'l' (lightness)
+/// channel, providing a more perceptually uniform adjustment than simple RGB scaling.
+///
+/// # Arguments
+///
+/// * `image` - A reference to the input [DynamicImage].
+/// * `value` - The brightness value, typically between -100.0 and 100.0.
+///
+/// # Returns
+///
+/// A new [DynamicImage] with the brightness adjustment applied.
+///
+/// # Examples
+///
+/// ```no_run
+/// use hdim_core::adjustments::brightness::apply_brightness;
+/// use image::DynamicImage;
+///
+/// let img = DynamicImage::new_rgba8(100, 100);
+/// let adjusted = apply_brightness(&img, 50.0);
+/// ```
 pub fn apply_brightness(image: &DynamicImage, value: f32) -> DynamicImage {
     let mut cloned_image = image.clone();
     let factor = value * 0.5; // Map -100..100 to -50..50 (Lch 'l' is 0-100)
