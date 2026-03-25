@@ -1,3 +1,8 @@
+//! Main application logic and state management.
+//!
+//! This module defines the [App] struct, which holds the global state of the application,
+//! including the loaded image, current adjustments, UI mode, and input handling.
+
 use crate::components::adjustment_panel::AdjustmentPanel;
 use crate::components::exif_view::ExifView;
 use crate::components::save_as::SaveAs;
@@ -13,65 +18,86 @@ use std::{
     time::{Duration, Instant},
 };
 
+/// Represents the currently focused UI region.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum ActiveWidget {
+    /// The central image viewport.
     Main,
+    /// The left-hand tool selection sidebar.
     Tools,
+    /// The right-hand adjustment slider panel.
     Adjustments,
+    /// The generic right toolbar container.
     RightToolbar,
 }
 
+/// Represents the current operational mode of the application.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum AppMode {
+    /// Standard navigation mode.
     Normal,
+    /// User is inputting crop dimensions.
     EditingCropValue,
+    /// User is modifying a specific adjustment slider.
     EditingAdjustmentValue,
+    /// Viewing EXIF metadata.
     ExifView,
+    /// Exporting the image.
     Saving,
 }
 
-/// Application state
+/// The global application state.
+///
+/// `App` orchestrates the interaction between the core image logic ([HdimImage])
+/// and the TUI rendering layer. It manages the event loop state, input buffers,
+/// and widget coordination.
 pub struct App {
-    /// We store the wrapper HdimImage so we can re-render it and access metadata
+    /// The core image data wrapper, preserving original state and metadata.
     pub hdim_image: HdimImage,
-    /// Cached version of the image with adjustments applied
+    /// A cached version of the image with all current adjustments applied.
+    /// Used for rendering to avoid re-processing on every frame.
     pub cached_image: DynamicImage,
     /// The top-left corner of the viewport on the source image (x, y) in pixels.
     pub source_pos: (u32, u32),
-    /// Zoom level. Represents `source_pixels / terminal_characters`.
-    /// A smaller value is more zoomed in.
+    /// Zoom level where 1.0 is 1:1 pixel mapping.
+    /// Smaller values represent "zooming out" (seeing more of the image).
     pub zoom: f32,
-    /// Track the last time an input was processed to prevent double-triggering
+    /// Timestamp of the last processed input event, used for debouncing.
     pub last_input_time: Instant,
-    /// Minimum time between processing consecutive inputs
+    /// Minimum duration between processing consecutive input events.
     pub input_delay: Duration,
-    // The currently selected tool
+    /// The tool currently selected by the user (e.g., Crop).
     pub selected_tool: Option<Tool>,
-    // The currently active widget
+    /// The UI widget currently receiving input focus.
     pub active_widget: ActiveWidget,
-    // The state of the crop tool
+    /// State specific to the crop tool operation.
     pub crop_state: CropState,
-    // The current application mode
+    /// The current interaction mode of the application.
     pub mode: AppMode,
-    // The index of the selected crop option
+    /// Index of the currently selected option in the crop menu.
     pub selected_crop_option_index: usize,
-    // The input string for crop values
+    /// Buffer for manual crop value input.
     pub crop_input: String,
-    // The input string for adjustment values
+    /// Buffer for manual adjustment value input.
     pub adjustment_input: String,
-    // The EXIF data of the image
+    /// Parsed EXIF metadata, if available.
     pub exif_data: Option<ExifData>,
-    // The state of the EXIF view
+    /// The view component for displaying EXIF data.
     pub exif_view: Option<ExifView>,
-    // Whether to show the right toolbar
+    /// Flag to toggle the visibility of the right sidebar.
     pub show_right_toolbar: bool,
-    // The state of the save as component
+    /// The "Save As" dialog component state.
     pub save_as: SaveAs,
-    // The state of the adjustment panel
+    /// The adjustment sliders panel component state.
     pub adjustment_panel: AdjustmentPanel,
 }
 
 impl App {
+    /// Creates a new `App` instance with the loaded image.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the image file cannot be re-opened to parse EXIF data.
     pub fn new(hdim_image: HdimImage, initial_zoom: f32) -> Result<Self> {
         let mut file = File::open(hdim_image.path.clone())?;
         let exif_data = ExifData::get_exif_data(&mut file).ok();
@@ -102,7 +128,13 @@ impl App {
         })
     }
 
-    /// Adjusts the zoom level.
+    /// Adjusts the zoom level by a multiplication factor.
+    ///
+    /// Clamps the minimum zoom to prevent invalid states.
+    ///
+    /// # Arguments
+    ///
+    /// * `factor` - The multiplier to apply to the current zoom level.
     pub fn zoom(&mut self, factor: f32) {
         self.zoom *= factor;
         // Clamp zoom to a reasonable range
@@ -112,14 +144,19 @@ impl App {
         self.clamp_source_pos();
     }
 
-    /// Moves the viewport on the source image.
+    /// Pans the viewport across the source image.
+    ///
+    /// # Arguments
+    ///
+    /// * `delta_x` - Horizontal pixels to move (positive = right).
+    /// * `delta_y` - Vertical pixels to move (positive = down).
     pub fn scroll(&mut self, delta_x: i32, delta_y: i32) {
         self.source_pos.0 = self.source_pos.0.saturating_add_signed(delta_x);
         self.source_pos.1 = self.source_pos.1.saturating_add_signed(delta_y);
         self.clamp_source_pos();
     }
 
-    // Prevents the viewport from going out of bounds of the source image.
+    /// Ensures the viewport position remains within the bounds of the image.
     pub fn clamp_source_pos(&mut self) {
         let image_width = self.hdim_image.width;
         let image_height = self.hdim_image.height;
@@ -131,14 +168,26 @@ impl App {
         }
     }
 
-    /// Updates the image adjustments and invalidates the cache
+    /// Applies the current adjustments from the panel to the image.
+    ///
+    /// This updates the `cached_image` used for rendering.
     pub fn update_adjustments(&mut self) {
         self.hdim_image.adjustments = self.adjustment_panel.get_adjustments();
         self.cached_image = self.hdim_image.apply_adjustments();
     }
 
-    /// Calculates the viewport dimensions and clamps the source position.
-    /// Returns the calculated source width and height in pixels.
+    /// Calculates the source viewport dimensions based on the target terminal size and zoom.
+    ///
+    /// Also clamps the source position to ensure the viewport is valid.
+    ///
+    /// # Arguments
+    ///
+    /// * `target_width` - The width of the available terminal area in columns.
+    /// * `target_height` - The height of the available terminal area in rows.
+    ///
+    /// # Returns
+    ///
+    /// A tuple `(source_width, source_height)` in image pixels.
     pub fn calculate_viewport(&mut self, target_width: u32, target_height: u32) -> (u32, u32) {
         let source_width = (target_width as f32 * self.zoom).round() as u32;
         let source_height = (target_height as f32 * self.zoom * 2.0).round() as u32;
