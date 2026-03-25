@@ -6,10 +6,6 @@ pub struct Palette {
     pub surface: Color,
     pub border: Color,
     pub accent: Color,
-    pub accent_dim: Color,
-    pub success: Color,
-    pub warning: Color,
-    pub error: Color,
     pub muted: Color,
 }
 
@@ -19,11 +15,21 @@ pub const ZINC_PALETTE: Palette = Palette {
     surface: Color::Rgb(39, 39, 42),       // Zinc 800
     border: Color::Rgb(63, 63, 70),        // Zinc 700
     accent: Color::Rgb(16, 185, 129),      // Emerald 500
-    accent_dim: Color::Rgb(6, 95, 70),     // Emerald 800
-    success: Color::Rgb(34, 197, 94),      // Green 500
-    warning: Color::Rgb(234, 179, 8),      // Yellow 500
-    error: Color::Rgb(239, 68, 68),        // Red 500
     muted: Color::Rgb(113, 113, 122),      // Zinc 500
 };
 
-pub const THEME: Palette = ZINC_PALETTE;
+pub const SLATE_PALETTE: Palette = Palette {
+    background: Color::Rgb(15, 23, 42),    // Slate 950
+    foreground: Color::Rgb(248, 250, 252), // Slate 50
+    surface: Color::Rgb(30, 41, 59),       // Slate 800
+    border: Color::Rgb(51, 65, 85),        // Slate 700
+    accent: Color::Rgb(56, 189, 248),      // Sky 400
+    muted: Color::Rgb(100, 116, 139),      // Slate 500
+};
+
+pub fn get_palette(name: &str) -> Palette {
+    match name.to_lowercase().as_str() {
+        "slate" => SLATE_PALETTE,
+        _ => ZINC_PALETTE,
+    }
+}

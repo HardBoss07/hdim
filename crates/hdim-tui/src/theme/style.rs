@@ -1,6 +1,7 @@
-use super::colors::THEME;
+use super::colors::Palette;
 use ratatui::style::{Modifier, Style};
 
+#[derive(Debug, Clone, Copy)]
 pub struct ThemeStyles {
     pub base: Style,
     pub border: Style,
@@ -11,18 +12,22 @@ pub struct ThemeStyles {
     pub inverted: Style,
 }
 
-pub const STYLES: ThemeStyles = ThemeStyles {
-    base: Style::new().fg(THEME.foreground).bg(THEME.background),
-    border: Style::new().fg(THEME.border),
-    border_active: Style::new().fg(THEME.accent),
-    highlight: Style::new()
-        .fg(THEME.foreground)
-        .bg(THEME.surface)
-        .add_modifier(Modifier::BOLD),
-    text_dim: Style::new().fg(THEME.muted),
-    accent: Style::new().fg(THEME.accent),
-    inverted: Style::new()
-        .bg(THEME.accent)
-        .fg(THEME.background)
-        .add_modifier(Modifier::BOLD),
-};
+impl ThemeStyles {
+    pub fn new(theme: &Palette) -> Self {
+        Self {
+            base: Style::new().fg(theme.foreground).bg(theme.background),
+            border: Style::new().fg(theme.border),
+            border_active: Style::new().fg(theme.accent),
+            highlight: Style::new()
+                .fg(theme.foreground)
+                .bg(theme.surface)
+                .add_modifier(Modifier::BOLD),
+            text_dim: Style::new().fg(theme.muted),
+            accent: Style::new().fg(theme.accent),
+            inverted: Style::new()
+                .bg(theme.accent)
+                .fg(theme.background)
+                .add_modifier(Modifier::BOLD),
+        }
+    }
+}

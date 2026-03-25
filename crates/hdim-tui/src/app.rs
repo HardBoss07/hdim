@@ -6,10 +6,14 @@
 use crate::components::adjustment_panel::AdjustmentPanel;
 use crate::components::exif_view::ExifView;
 use crate::components::save_as::SaveAs;
+use crate::components::settings::SettingsView;
+use crate::config::Config;
+use crate::theme::{Palette, ThemeStyles, get_palette};
 use color_eyre::eyre::{Ok, Result};
 use hdim_core::{
     HdimImage,
     exif::ExifData,
+    localization::Localization,
     state::{CropState, Tool},
 };
 use image::DynamicImage;
@@ -44,6 +48,10 @@ pub enum AppMode {
     ExifView,
     /// Exporting the image.
     Saving,
+    /// Confirming quit with unsaved changes.
+    ConfirmQuit,
+    /// Settings screen.
+    Settings,
 }
 
 /// The global application state.
@@ -90,6 +98,18 @@ pub struct App {
     pub save_as: SaveAs,
     /// The adjustment sliders panel component state.
     pub adjustment_panel: AdjustmentPanel,
+    /// The index in history that corresponds to the last saved state.
+    pub last_saved_index: usize,
+    /// Persistent configuration.
+    pub config: Config,
+    /// Localized strings.
+    pub localization: Localization,
+    /// Settings view state.
+    pub settings_view: Option<SettingsView>,
+    /// Current color palette.
+    pub palette: Palette,
+    /// Current UI styles.
+    pub styles: ThemeStyles,
 }
 
 impl App {
@@ -103,7 +123,13 @@ impl App {
         let exif_data = ExifData::get_exif_data(&mut file).ok();
         let exif_view = exif_data.as_ref().map(ExifView::new);
 
-        let adjustment_panel = AdjustmentPanel::new(hdim_image.adjustments);
+        let config = Config::load();
+        let localization = config.language.get_localization();
+        let palette = get_palette(&config.theme);
+        let styles = ThemeStyles::new(&palette);
+
+        let adjustment_panel =
+            AdjustmentPanel::new(hdim_image.adjustments, &localization.adjustments);
         let cached_image = hdim_image.apply_adjustments();
 
         Ok(Self {
@@ -125,7 +151,23 @@ impl App {
             show_right_toolbar: true,
             save_as: SaveAs::new(),
             adjustment_panel,
+            last_saved_index: 0,
+            config,
+            localization,
+            settings_view: None,
+            palette,
+            styles,
         })
+    }
+
+    /// Refreshes the localization strings based on current config.
+    pub fn refresh_localization(&mut self) {
+        self.localization = self.config.language.get_localization();
+        self.palette = get_palette(&self.config.theme);
+        self.styles = ThemeStyles::new(&self.palette);
+        // Also need to refresh the adjustment panel because it stores labels in Sliders
+        self.adjustment_panel =
+            AdjustmentPanel::new(self.hdim_image.adjustments, &self.localization.adjustments);
     }
 
     /// Adjusts the zoom level by a multiplication factor.
@@ -138,10 +180,21 @@ impl App {
     pub fn zoom(&mut self, factor: f32) {
         self.zoom *= factor;
         // Clamp zoom to a reasonable range
-        if self.zoom < 0.01 {
-            self.zoom = 0.01;
+        // Hard limit of 2x (0.5) to prevent rendering breakdowns
+        if self.zoom < 0.5 {
+            self.zoom = 0.5;
         }
         self.clamp_source_pos();
+    }
+
+    /// Checks if there are unsaved changes in the history.
+    pub fn has_unsaved_changes(&self) -> bool {
+        self.hdim_image.history.current_index() != self.last_saved_index
+    }
+
+    /// Marks the current state as saved.
+    pub fn mark_saved(&mut self) {
+        self.last_saved_index = self.hdim_image.history.current_index();
     }
 
     /// Pans the viewport across the source image.
