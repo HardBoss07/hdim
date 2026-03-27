@@ -135,15 +135,15 @@ The workspace is defined in the root `Cargo.toml`.
 
 ### Phase 9: Global State & Keybinds
 
-- [ ] **hdim-core & hdim-tui**: Overhaul the Undo/Redo stack to be a global application feature, rather than limited to the adjustments tab.
-- [ ] **hdim-tui**: Allow `Ctrl+s` to open the save prompt globally from anywhere in the app (handle potential conflicts with undo/redo states).
+- [x] **hdim-core & hdim-tui**: Overhaul the Undo/Redo stack to be a global application feature, rather than limited to the adjustments tab.
+- [x] **hdim-tui**: Allow `Ctrl+s` to open the save prompt globally from anywhere in the app (handle potential conflicts with undo/redo states).
 
 ### Phase 10: Bug Fixes & UI Consistency
 
 - [ ] **hdim-tui**: Fix keybind overlap so typing values (like '1') in adjustment settings does not trigger tool shortcuts.
 - [ ] **hdim-tui**: Enable holding `Ctrl` while adjusting tool values to increment/decrement by 10 directly.
 - [ ] **hdim-tui**: Add "No Metadata found" placeholder text in EXIF view when metadata is empty.
-- [ ] **hdim-tui**: Enforce FULL CAPS LOCK on all UI labels (excluding app state labels).
+- [ ] **hdim-tui**: Remove FULL CAPS LOCK on all UI labels (excluding app state / app name labels).
 - [ ] **hdim-tui**: Fix top label cropping in the Adjustment sidebar caused by overlap with the main title.
 - [ ] **hdim-tui**: Standardize border types (rounded vs. sharp) across all sidebar tools to ensure visual consistency.
 - [ ] **hdim-tui**: Implement "Soft Apply" for Transform options: dynamically update the viewport during adjustment, but require an explicit "Apply" action to finalize (including a warning popup for unapplied changes).

@@ -1,18 +1,29 @@
 //! Undo/Redo history management.
 //!
-//! Tracks a stack of [Adjustments] states, allowing the user to navigate
+//! Tracks a stack of image states, allowing the user to navigate
 //! backward and forward through their editing session.
 
 use crate::Adjustments;
+use image::DynamicImage;
+use std::sync::Arc;
 
-/// Manages the history of image adjustments.
+/// Represents a single state in the history stack.
+#[derive(Debug, Clone)]
+pub struct HistoryState {
+    /// The image data at this point in history.
+    pub data: Arc<DynamicImage>,
+    /// The adjustments at this point in history.
+    pub adjustments: Adjustments,
+}
+
+/// Manages the history of image states.
 ///
 /// Implements a linear undo/redo stack. When a new state is recorded,
 /// any "future" states (created by undoing) are discarded.
 #[derive(Debug, Clone)]
 pub struct History {
-    /// The stack of recorded adjustment states.
-    states: Vec<Adjustments>,
+    /// The stack of recorded states.
+    states: Vec<HistoryState>,
     /// The index of the currently active state in `states`.
     current_index: usize,
 }
@@ -22,38 +33,36 @@ impl History {
     ///
     /// # Arguments
     ///
+    /// * `initial_image` - The starting image data.
     /// * `initial_adjustments` - The starting [Adjustments] configuration.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use hdim_core::{HdimImage, Adjustments};
-    /// use hdim_core::history::history::History;
-    ///
-    /// let initial = Adjustments::default();
-    /// let history = History::new(initial);
-    /// ```
-    pub fn new(initial_adjustments: Adjustments) -> Self {
+    pub fn new(initial_image: Arc<DynamicImage>, initial_adjustments: Adjustments) -> Self {
         History {
-            states: vec![initial_adjustments],
+            states: vec![HistoryState {
+                data: initial_image,
+                adjustments: initial_adjustments,
+            }],
             current_index: 0,
         }
     }
 
-    /// Records a new adjustment state, pushing it onto the history stack.
+    /// Records a new state, pushing it onto the history stack.
     ///
     /// If the current state is not the latest (i.e., after an undo),
     /// all future states are discarded before adding the new one.
     ///
     /// # Arguments
     ///
-    /// * `new_adjustments` - The new [Adjustments] state to record.
-    pub fn record_adjustments(&mut self, new_adjustments: Adjustments) {
+    /// * `image` - The new image data to record.
+    /// * `adjustments` - The new [Adjustments] state to record.
+    pub fn record_state(&mut self, image: Arc<DynamicImage>, adjustments: Adjustments) {
         // If we are not at the end of the history, truncate the future states
         if self.current_index < self.states.len() - 1 {
             self.states.truncate(self.current_index + 1);
         }
-        self.states.push(new_adjustments);
+        self.states.push(HistoryState {
+            data: image,
+            adjustments,
+        });
         self.current_index = self.states.len() - 1;
     }
 
@@ -61,12 +70,12 @@ impl History {
     ///
     /// # Returns
     ///
-    /// * `Some(Adjustments)` - The previous state, if available.
+    /// * `Some(HistoryState)` - The previous state, if available.
     /// * `None` - If already at the initial state.
-    pub fn undo(&mut self) -> Option<Adjustments> {
+    pub fn undo(&mut self) -> Option<HistoryState> {
         if self.current_index > 0 {
             self.current_index -= 1;
-            Some(self.states[self.current_index])
+            Some(self.states[self.current_index].clone())
         } else {
             None
         }
@@ -76,20 +85,20 @@ impl History {
     ///
     /// # Returns
     ///
-    /// * `Some(Adjustments)` - The next state, if available (i.e., after an undo).
+    /// * `Some(HistoryState)` - The next state, if available (i.e., after an undo).
     /// * `None` - If already at the latest state.
-    pub fn redo(&mut self) -> Option<Adjustments> {
+    pub fn redo(&mut self) -> Option<HistoryState> {
         if self.current_index < self.states.len() - 1 {
             self.current_index += 1;
-            Some(self.states[self.current_index])
+            Some(self.states[self.current_index].clone())
         } else {
             None
         }
     }
 
-    /// Returns the currently active adjustment state.
-    pub fn current_adjustments(&self) -> Adjustments {
-        self.states[self.current_index]
+    /// Returns the currently active state.
+    pub fn current_state(&self) -> HistoryState {
+        self.states[self.current_index].clone()
     }
 
     /// Returns the current index in the history stack.

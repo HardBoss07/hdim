@@ -18,6 +18,7 @@ use crate::state::TransformState;
 use anyhow::Result;
 use image::{DynamicImage, GenericImageView};
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 /// Represents the set of image adjustments that can be applied to a [HdimImage].
 ///
@@ -73,14 +74,14 @@ pub struct HdimImage {
     /// Original path of the image on disk.
     pub path: PathBuf,
     /// Raw image data loaded into memory.
-    pub data: DynamicImage,
+    pub data: Arc<DynamicImage>,
     /// Width of the image in pixels.
     pub width: u32,
     /// Height of the image in pixels.
     pub height: u32,
     /// Current set of adjustments applied to the image.
     pub adjustments: Adjustments,
-    /// History of adjustments for undo/redo functionality.
+    /// History of image states for undo/redo functionality.
     pub history: History,
 }
 
@@ -104,23 +105,61 @@ impl HdimImage {
         let data = image::open(path)?;
         let (width, height) = data.dimensions();
         let adjustments = Adjustments::default();
+        let data_arc = Arc::new(data);
 
         Ok(HdimImage {
             path: path.to_path_buf(),
-            data,
+            data: data_arc.clone(),
             width,
             height,
             adjustments,
-            history: History::new(adjustments),
+            history: History::new(data_arc, adjustments),
         })
+    }
+
+    /// Records the current image state and adjustments into history.
+    pub fn record_state(&mut self) {
+        self.history
+            .record_state(self.data.clone(), self.adjustments);
+    }
+
+    /// Moves one step backward in history and updates the current state.
+    pub fn undo(&mut self) -> bool {
+        if let Some(state) = self.history.undo() {
+            self.data = state.data;
+            self.adjustments = state.adjustments;
+            let (width, height) = self.data.dimensions();
+            self.width = width;
+            self.height = height;
+            true
+        } else {
+            false
+        }
+    }
+
+    /// Moves one step forward in history and updates the current state.
+    pub fn redo(&mut self) -> bool {
+        if let Some(state) = self.history.redo() {
+            self.data = state.data;
+            self.adjustments = state.adjustments;
+            let (width, height) = self.data.dimensions();
+            self.width = width;
+            self.height = height;
+            true
+        } else {
+            false
+        }
     }
 
     /// Permanently applies a [TransformState] to the base image data.
     pub fn transform_image(&mut self, transform: &TransformState) {
-        self.data = transform::apply_transform(&self.data, transform);
-        let (width, height) = self.data.dimensions();
+        let new_data = transform::apply_transform(&self.data, transform);
+        let (width, height) = new_data.dimensions();
+        self.data = Arc::new(new_data);
         self.width = width;
         self.height = height;
+        // After a transform, we should record the new state
+        self.record_state();
     }
 
     /// Applies the current set of [Adjustments] to the raw image data.
@@ -140,7 +179,7 @@ impl HdimImage {
     /// let adjusted = hdim_image.apply_adjustments();
     /// ```
     pub fn apply_adjustments(&self) -> DynamicImage {
-        let mut adjusted_image = self.data.clone();
+        let mut adjusted_image = (*self.data).clone();
         let adj = self.adjustments;
 
         // Order of application matters

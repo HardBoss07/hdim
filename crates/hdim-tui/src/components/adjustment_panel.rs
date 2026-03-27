@@ -9,9 +9,7 @@ use ratatui::{
 };
 
 pub enum AdjustmentsChange {
-    Updated(Adjustments),
-    Undo(Adjustments),
-    Redo(Adjustments),
+    Updated,
     EnterPressed,
 }
 
@@ -83,17 +81,11 @@ impl AdjustmentPanel {
             }
             KeyCode::Left => {
                 self.sliders[self.selected_index].decrement(1.0);
-                return Some(AdjustmentsChange::Updated(self.get_adjustments()));
+                return Some(AdjustmentsChange::Updated);
             }
             KeyCode::Right => {
                 self.sliders[self.selected_index].increment(1.0);
-                return Some(AdjustmentsChange::Updated(self.get_adjustments()));
-            }
-            KeyCode::Char('u') => {
-                return Some(AdjustmentsChange::Undo(self.get_adjustments()));
-            }
-            KeyCode::Char('r') => {
-                return Some(AdjustmentsChange::Redo(self.get_adjustments()));
+                return Some(AdjustmentsChange::Updated);
             }
             KeyCode::Enter => {
                 return Some(AdjustmentsChange::EnterPressed);
