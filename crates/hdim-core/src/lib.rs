@@ -11,8 +11,10 @@ pub mod exif;
 pub mod history;
 pub mod localization;
 pub mod state;
+pub mod transform;
 pub mod utils;
 use crate::history::history::History;
+use crate::state::TransformState;
 use anyhow::Result;
 use image::{DynamicImage, GenericImageView};
 use std::path::{Path, PathBuf};
@@ -111,6 +113,14 @@ impl HdimImage {
             adjustments,
             history: History::new(adjustments),
         })
+    }
+
+    /// Permanently applies a [TransformState] to the base image data.
+    pub fn transform_image(&mut self, transform: &TransformState) {
+        self.data = transform::apply_transform(&self.data, transform);
+        let (width, height) = self.data.dimensions();
+        self.width = width;
+        self.height = height;
     }
 
     /// Applies the current set of [Adjustments] to the raw image data.
