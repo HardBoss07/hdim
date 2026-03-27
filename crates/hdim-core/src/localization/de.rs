@@ -4,7 +4,7 @@ pub fn get_localization() -> Localization {
     Localization {
         tools: Tools {
             title: " WERKZEUGE ".to_string(),
-            crop: "Zuschneiden".to_string(),
+            transform: "Transformieren".to_string(),
             metadata: "Metadaten".to_string(),
             export: "Exportieren".to_string(),
             adjust: "Anpassen".to_string(),
@@ -13,7 +13,7 @@ pub fn get_localization() -> Localization {
         status: Status {
             normal: " NORMAL ".to_string(),
             edit_value: " WERT BEARBEITEN ".to_string(),
-            crop: " ZUSCHNEIDEN ".to_string(),
+            transform: " TRANSFORMIEREN ".to_string(),
             metadata: " METADATEN ".to_string(),
             exporting: " EXPORTIEREN ".to_string(),
             confirm_quit: " BEENDEN BESTÄTIGEN ".to_string(),
@@ -61,13 +61,18 @@ pub fn get_localization() -> Localization {
             longitude: "  Längengrad: ".to_string(),
             altitude: "  Höhe: ".to_string(),
         },
-        crop: Crop {
-            title: "Zuschneideoptionen".to_string(),
+        transform: Transform {
+            title: " Transformationsoptionen ".to_string(),
             left: "Links".to_string(),
             right: "Rechts".to_string(),
             top: "Oben".to_string(),
             bottom: "Unten".to_string(),
+            rotate_left: "Nach links drehen".to_string(),
+            rotate_right: "Nach rechts drehen".to_string(),
+            flip_horizontal: "Horizontal spiegeln".to_string(),
+            flip_vertical: "Vertikal spiegeln".to_string(),
             from_viewport: "Aus Ansicht zuschneiden".to_string(),
+            apply: "Transformation anwenden".to_string(),
         },
         export: Export {
             title: " BILD EXPORTIEREN ".to_string(),

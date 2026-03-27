@@ -10,7 +10,7 @@ pub struct Localization {
     pub common: Common,
     pub adjustments: Adjustments,
     pub exif: Exif,
-    pub crop: Crop,
+    pub transform: Transform,
     pub export: Export,
     pub confirm_quit: ConfirmQuit,
     pub settings: Settings,
@@ -29,7 +29,7 @@ pub struct Settings {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Tools {
     pub title: String,
-    pub crop: String,
+    pub transform: String,
     pub metadata: String,
     pub export: String,
     pub adjust: String,
@@ -40,7 +40,7 @@ pub struct Tools {
 pub struct Status {
     pub normal: String,
     pub edit_value: String,
-    pub crop: String,
+    pub transform: String,
     pub metadata: String,
     pub exporting: String,
     pub confirm_quit: String,
@@ -95,13 +95,18 @@ pub struct Exif {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Crop {
+pub struct Transform {
     pub title: String,
     pub left: String,
     pub right: String,
     pub top: String,
     pub bottom: String,
+    pub rotate_left: String,
+    pub rotate_right: String,
+    pub flip_horizontal: String,
+    pub flip_vertical: String,
     pub from_viewport: String,
+    pub apply: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

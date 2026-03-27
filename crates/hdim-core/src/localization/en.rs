@@ -4,7 +4,7 @@ pub fn get_localization() -> Localization {
     Localization {
         tools: Tools {
             title: " TOOLS ".to_string(),
-            crop: "Crop".to_string(),
+            transform: "Transform".to_string(),
             metadata: "Metadata".to_string(),
             export: "Export".to_string(),
             adjust: "Adjust".to_string(),
@@ -13,7 +13,7 @@ pub fn get_localization() -> Localization {
         status: Status {
             normal: " NORMAL ".to_string(),
             edit_value: " EDIT VALUE ".to_string(),
-            crop: " CROP ".to_string(),
+            transform: " TRANSFORM ".to_string(),
             metadata: " METADATA ".to_string(),
             exporting: " EXPORTING ".to_string(),
             confirm_quit: " CONFIRM QUIT ".to_string(),
@@ -60,13 +60,18 @@ pub fn get_localization() -> Localization {
             longitude: "  Longitude: ".to_string(),
             altitude: "  Altitude: ".to_string(),
         },
-        crop: Crop {
-            title: "Crop Options".to_string(),
+        transform: Transform {
+            title: " Transform Options ".to_string(),
             left: "Left".to_string(),
             right: "Right".to_string(),
             top: "Top".to_string(),
             bottom: "Bottom".to_string(),
+            rotate_left: "Rotate Left".to_string(),
+            rotate_right: "Rotate Right".to_string(),
+            flip_horizontal: "Flip Horizontal".to_string(),
+            flip_vertical: "Flip Vertical".to_string(),
             from_viewport: "Crop from viewport".to_string(),
+            apply: "Apply Transform".to_string(),
         },
         export: Export {
             title: " EXPORT IMAGE ".to_string(),

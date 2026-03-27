@@ -35,6 +35,8 @@ hdim/
 │   │   │   │   ├── de.rs
 │   │   │   │   ├── en.rs
 │   │   │   │   └── mod.rs
+│   │   │   ├── transform/
+│   │   │   │   └── mod.rs
 │   │   │   ├── consts.rs
 │   │   │   ├── lib.rs
 │   │   │   ├── state.rs
@@ -69,11 +71,11 @@ hdim/
 │       │   │   │   ├── mod.rs
 │       │   │   │   └── slider.rs
 │       │   │   ├── adjustment_panel.rs
-│       │   │   ├── crop.rs
 │       │   │   ├── exif_view.rs
 │       │   │   ├── mod.rs
 │       │   │   ├── save_as.rs
-│       │   │   └── settings.rs
+│       │   │   ├── settings.rs
+│       │   │   └── transform.rs
 │       │   ├── theme/
 │       │   │   ├── colors.rs
 │       │   │   ├── mod.rs
