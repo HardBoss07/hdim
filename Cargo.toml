@@ -17,6 +17,7 @@ rand = "0.8.5"
 
 # Exif Data Management
 kamadak-exif = "0.6.1"
+img-parts = "0.3"
 
 # Error Handling & Utils
 anyhow = "1.0"

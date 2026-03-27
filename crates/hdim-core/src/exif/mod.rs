@@ -12,6 +12,7 @@ pub mod exposure;
 pub mod gps;
 pub mod image;
 pub mod lens;
+pub mod save;
 pub mod util;
 
 pub use camera::{CameraExif, get_camera_exif};
@@ -21,4 +22,5 @@ pub use exposure::{ExposureExif, get_exposure_exif};
 pub use gps::{GpsExif, get_gps_exif};
 pub use image::{ImageExif, get_image_exif};
 pub use lens::{LensExif, get_lens_exif};
+pub use save::get_exif_bytes_for_save;
 pub use util::{get_ascii, get_rational, get_rational_vec};

@@ -185,6 +185,59 @@ impl HdimImage {
         }
         image
     }
+
+    /// Saves the image with the current adjustments and handles EXIF metadata.
+    ///
+    /// If the `exif` feature is enabled, this method will attempt to preserve or strip
+    /// EXIF data based on the `strip` argument.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - The destination path for the saved image.
+    /// * `format` - The image format to use for saving.
+    /// * `strip` - Whether to strip sensitive EXIF data.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if the image cannot be saved or if EXIF handling fails.
+    pub fn save_with_exif(
+        &self,
+        path: &Path,
+        format: image::ImageFormat,
+        strip: bool,
+    ) -> Result<()> {
+        let adjusted_image = self.apply_adjustments();
+
+        #[cfg(feature = "exif")]
+        {
+            use img_parts::ImageEXIF;
+            if let Some(exif_bytes) = exif::get_exif_bytes_for_save(&self.path, strip)? {
+                let mut buffer = std::io::Cursor::new(Vec::new());
+                adjusted_image.write_to(&mut buffer, format)?;
+                let mut bytes = buffer.into_inner();
+
+                if format == image::ImageFormat::Jpeg {
+                    let mut jpeg = img_parts::jpeg::Jpeg::from_bytes(bytes.into())?;
+                    jpeg.set_exif(Some(exif_bytes.into()));
+                    let mut out = Vec::new();
+                    jpeg.encoder().write_to(&mut out)?;
+                    bytes = out;
+                } else if format == image::ImageFormat::Png {
+                    let mut png = img_parts::png::Png::from_bytes(bytes.into())?;
+                    png.set_exif(Some(exif_bytes.into()));
+                    let mut out = Vec::new();
+                    png.encoder().write_to(&mut out)?;
+                    bytes = out;
+                }
+
+                std::fs::write(path, bytes)?;
+                return Ok(());
+            }
+        }
+
+        adjusted_image.save_with_format(path, format)?;
+        Ok(())
+    }
 }
 
 /// Simple width and height dimensions.

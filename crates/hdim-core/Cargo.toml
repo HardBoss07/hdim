@@ -5,13 +5,14 @@ edition = "2024"
 
 [features]
 default = []
-exif = ["dep:kamadak-exif"]
+exif = ["dep:kamadak-exif", "dep:img-parts"]
 
 [dependencies]
 image = { workspace = true }
 thiserror = { workspace = true }
 anyhow = { workspace = true }
 kamadak-exif = { workspace = true, optional = true }
+img-parts = { workspace = true, optional = true }
 palette = { workspace = true, features = ["serde"] }
 rand = { workspace = true }
 serde = { workspace = true }
