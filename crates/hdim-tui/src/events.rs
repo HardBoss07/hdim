@@ -1,7 +1,7 @@
 use crate::app::{ActiveWidget, App, AppMode};
 use crate::components::adjustment_panel::AdjustmentsChange;
-use crate::components::crop::handle_crop_events;
 use crate::components::settings::SettingsView;
+use crate::components::transform::handle_transform_events;
 use crate::config::Language;
 use color_eyre::eyre::Result;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
@@ -77,7 +77,7 @@ fn handle_key_press(app: &mut App, key: KeyEvent) {
     {
         match key.code {
             KeyCode::Char('1') => {
-                app.selected_tool = Some(Tool::Crop);
+                app.selected_tool = Some(Tool::Transform);
                 app.active_widget = ActiveWidget::RightToolbar;
                 app.mode = AppMode::Normal;
                 app.show_right_toolbar = true;
@@ -118,7 +118,7 @@ fn handle_key_press(app: &mut App, key: KeyEvent) {
             }
             KeyCode::Esc
                 if app.mode != AppMode::EditingAdjustmentValue
-                    && app.mode != AppMode::EditingCropValue =>
+                    && app.mode != AppMode::EditingTransformValue =>
             {
                 app.selected_tool = None;
                 app.active_widget = ActiveWidget::Main;
@@ -235,28 +235,28 @@ fn handle_key_press(app: &mut App, key: KeyEvent) {
             }
             _ => {}
         },
-        AppMode::EditingCropValue => match key.code {
+        AppMode::EditingTransformValue => match key.code {
             KeyCode::Char(c) if c.is_ascii_digit() => {
-                app.crop_input.push(c);
+                app.transform_input.push(c);
             }
             KeyCode::Backspace => {
-                app.crop_input.pop();
+                app.transform_input.pop();
             }
             KeyCode::Enter => {
-                if let Ok(value) = app.crop_input.parse::<u32>() {
-                    match app.selected_crop_option_index {
-                        0 => app.crop_state.left = value,
-                        1 => app.crop_state.right = value,
-                        2 => app.crop_state.top = value,
-                        3 => app.crop_state.bottom = value,
+                if let Ok(value) = app.transform_input.parse::<u32>() {
+                    match app.selected_transform_option_index {
+                        0 => app.transform_state.left = value,
+                        1 => app.transform_state.right = value,
+                        2 => app.transform_state.top = value,
+                        3 => app.transform_state.bottom = value,
                         _ => {}
                     }
                 }
-                app.crop_input.clear();
+                app.transform_input.clear();
                 app.mode = AppMode::Normal;
             }
             KeyCode::Esc => {
-                app.crop_input.clear();
+                app.transform_input.clear();
                 app.mode = AppMode::Normal;
             }
             _ => {}
@@ -296,8 +296,8 @@ fn handle_key_press(app: &mut App, key: KeyEvent) {
         },
         AppMode::Normal => match key.code {
             _ => {
-                if let Some(Tool::Crop) = app.selected_tool {
-                    handle_crop_events(key, app);
+                if let Some(Tool::Transform) = app.selected_tool {
+                    handle_transform_events(key, app);
                 } else {
                     match app.active_widget {
                         ActiveWidget::Main => match key.code {

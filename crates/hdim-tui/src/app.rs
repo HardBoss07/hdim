@@ -14,7 +14,7 @@ use hdim_core::{
     HdimImage,
     exif::ExifData,
     localization::Localization,
-    state::{CropState, Tool},
+    state::{Tool, TransformState},
 };
 use image::DynamicImage;
 use std::{
@@ -40,8 +40,8 @@ pub enum ActiveWidget {
 pub enum AppMode {
     /// Standard navigation mode.
     Normal,
-    /// User is inputting crop dimensions.
-    EditingCropValue,
+    /// User is inputting transform values.
+    EditingTransformValue,
     /// User is modifying a specific adjustment slider.
     EditingAdjustmentValue,
     /// Viewing EXIF metadata.
@@ -74,18 +74,18 @@ pub struct App {
     pub last_input_time: Instant,
     /// Minimum duration between processing consecutive input events.
     pub input_delay: Duration,
-    /// The tool currently selected by the user (e.g., Crop).
+    /// The tool currently selected by the user (e.g., Transform).
     pub selected_tool: Option<Tool>,
     /// The UI widget currently receiving input focus.
     pub active_widget: ActiveWidget,
-    /// State specific to the crop tool operation.
-    pub crop_state: CropState,
+    /// State specific to the transform tool operation.
+    pub transform_state: TransformState,
     /// The current interaction mode of the application.
     pub mode: AppMode,
-    /// Index of the currently selected option in the crop menu.
-    pub selected_crop_option_index: usize,
-    /// Buffer for manual crop value input.
-    pub crop_input: String,
+    /// Index of the currently selected option in the transform menu.
+    pub selected_transform_option_index: usize,
+    /// Buffer for manual transform value input.
+    pub transform_input: String,
     /// Buffer for manual adjustment value input.
     pub adjustment_input: String,
     /// Parsed EXIF metadata, if available.
@@ -100,6 +100,8 @@ pub struct App {
     pub adjustment_panel: AdjustmentPanel,
     /// The index in history that corresponds to the last saved state.
     pub last_saved_index: usize,
+    /// Last target viewport size (width, height) in columns/rows.
+    pub last_viewport_size: (u16, u16),
     /// Persistent configuration.
     pub config: Config,
     /// Localized strings.
@@ -141,10 +143,10 @@ impl App {
             input_delay: Duration::from_millis(50), // Reduced for snappier input
             selected_tool: None,
             active_widget: ActiveWidget::Main,
-            crop_state: CropState::default(),
+            transform_state: TransformState::default(),
             mode: AppMode::Normal,
-            selected_crop_option_index: 0,
-            crop_input: String::new(),
+            selected_transform_option_index: 0,
+            transform_input: String::new(),
             adjustment_input: String::new(),
             exif_data,
             exif_view,
@@ -152,6 +154,7 @@ impl App {
             save_as: SaveAs::new(),
             adjustment_panel,
             last_saved_index: 0,
+            last_viewport_size: (0, 0),
             config,
             localization,
             settings_view: None,
@@ -242,6 +245,7 @@ impl App {
     ///
     /// A tuple `(source_width, source_height)` in image pixels.
     pub fn calculate_viewport(&mut self, target_width: u32, target_height: u32) -> (u32, u32) {
+        self.last_viewport_size = (target_width as u16, target_height as u16);
         let source_width = (target_width as f32 * self.zoom).round() as u32;
         let source_height = (target_height as f32 * self.zoom * 2.0).round() as u32;
 
@@ -258,5 +262,24 @@ impl App {
             .min(image_height.saturating_sub(source_height));
 
         (source_width, source_height)
+    }
+
+    /// Sets the transform state to crop exactly what is currently visible in the viewport.
+    pub fn crop_from_viewport(&mut self) {
+        let (source_width, source_height) = self.calculate_viewport(
+            self.last_viewport_size.0 as u32,
+            self.last_viewport_size.1 as u32,
+        );
+
+        self.transform_state.left = self.source_pos.0;
+        self.transform_state.top = self.source_pos.1;
+        self.transform_state.right = self
+            .hdim_image
+            .width
+            .saturating_sub(self.source_pos.0 + source_width);
+        self.transform_state.bottom = self
+            .hdim_image
+            .height
+            .saturating_sub(self.source_pos.1 + source_height);
     }
 }
