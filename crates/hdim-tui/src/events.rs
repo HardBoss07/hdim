@@ -70,6 +70,57 @@ pub fn handle_events(app: &mut App) -> Result<bool> {
 fn handle_key_press(app: &mut App, key: KeyEvent) {
     let pan_amount_pixels = (PAN_AMOUNT_CHARACTERS as f32 * app.zoom).round() as i32;
 
+    // Global Keybinds (Available in most modes)
+    if app.mode != AppMode::ConfirmQuit {
+        if key.modifiers.contains(KeyModifiers::CONTROL) {
+            match key.code {
+                KeyCode::Char('z') => {
+                    if app.hdim_image.undo() {
+                        let new_adjustments = app.hdim_image.adjustments;
+                        app.adjustment_panel
+                            .update_sliders_from_adjustments(new_adjustments);
+                        app.update_adjustments();
+                    }
+                    return;
+                }
+                KeyCode::Char('y') => {
+                    if app.hdim_image.redo() {
+                        let new_adjustments = app.hdim_image.adjustments;
+                        app.adjustment_panel
+                            .update_sliders_from_adjustments(new_adjustments);
+                        app.update_adjustments();
+                    }
+                    return;
+                }
+                KeyCode::Char('s') => {
+                    app.mode = AppMode::Saving;
+                    let original_filename = app
+                        .hdim_image
+                        .path
+                        .file_stem()
+                        .map(|s| s.to_string_lossy().into_owned())
+                        .unwrap_or_default();
+                    app.save_as.set_initial_filename(&original_filename);
+                    return;
+                }
+                _ => {}
+            }
+        } else if key
+            .modifiers
+            .contains(KeyModifiers::CONTROL | KeyModifiers::SHIFT)
+        {
+            if key.code == KeyCode::Char('Z') || key.code == KeyCode::Char('z') {
+                if app.hdim_image.redo() {
+                    let new_adjustments = app.hdim_image.adjustments;
+                    app.adjustment_panel
+                        .update_sliders_from_adjustments(new_adjustments);
+                    app.update_adjustments();
+                }
+                return;
+            }
+        }
+    }
+
     // Global tool switching (available in most modes except Saving and ConfirmQuit and Settings)
     if app.mode != AppMode::Saving
         && app.mode != AppMode::ConfirmQuit
@@ -223,8 +274,7 @@ fn handle_key_press(app: &mut App, key: KeyEvent) {
                         .update_selected_slider_value(clamped_value);
 
                     app.update_adjustments();
-                    let new_adjustments = app.hdim_image.adjustments;
-                    app.hdim_image.history.record_adjustments(new_adjustments);
+                    app.hdim_image.record_state();
                 }
                 app.adjustment_input.clear();
                 app.mode = AppMode::Normal;
@@ -312,29 +362,9 @@ fn handle_key_press(app: &mut App, key: KeyEvent) {
                         ActiveWidget::Adjustments => {
                             if let Some(change) = app.adjustment_panel.handle_event(key) {
                                 match change {
-                                    AdjustmentsChange::Updated(_) => {
+                                    AdjustmentsChange::Updated => {
                                         app.update_adjustments();
-                                        app.hdim_image
-                                            .history
-                                            .record_adjustments(app.hdim_image.adjustments);
-                                    }
-                                    AdjustmentsChange::Undo(_) => {
-                                        if let Some(prev_adjustments) =
-                                            app.hdim_image.history.undo()
-                                        {
-                                            app.adjustment_panel
-                                                .update_sliders_from_adjustments(prev_adjustments);
-                                            app.update_adjustments();
-                                        }
-                                    }
-                                    AdjustmentsChange::Redo(_) => {
-                                        if let Some(next_adjustments) =
-                                            app.hdim_image.history.redo()
-                                        {
-                                            app.adjustment_panel
-                                                .update_sliders_from_adjustments(next_adjustments);
-                                            app.update_adjustments();
-                                        }
+                                        app.hdim_image.record_state();
                                     }
                                     AdjustmentsChange::EnterPressed => {
                                         app.mode = AppMode::EditingAdjustmentValue;
