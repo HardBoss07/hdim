@@ -143,23 +143,30 @@ fn handle_key_press(app: &mut App, key: KeyEvent) {
                         }
                     }
                     KeyCode::Down => {
-                        if settings_view.selected_index < 1 {
-                            // Language and Theme
+                        if settings_view.selected_index < 2 {
                             settings_view.selected_index += 1;
                         }
                     }
                     KeyCode::Left | KeyCode::Right => {
-                        if settings_view.selected_index == 0 {
-                            // Toggle language
-                            settings_view.selected_language = match settings_view.selected_language
-                            {
-                                Language::English => Language::German,
-                                Language::German => Language::English,
-                            };
-                        } else if settings_view.selected_index == 1 {
-                            // Toggle theme
-                            settings_view.selected_theme_index =
-                                (settings_view.selected_theme_index + 1) % 2;
+                        match settings_view.selected_index {
+                            0 => {
+                                // Toggle language
+                                settings_view.selected_language =
+                                    match settings_view.selected_language {
+                                        Language::English => Language::German,
+                                        Language::German => Language::English,
+                                    };
+                            }
+                            1 => {
+                                // Toggle theme
+                                settings_view.selected_theme_index =
+                                    (settings_view.selected_theme_index + 1) % 2;
+                            }
+                            2 => {
+                                // Toggle strip_exif
+                                settings_view.strip_exif = !settings_view.strip_exif;
+                            }
+                            _ => {}
                         }
                     }
                     KeyCode::Char('s') | KeyCode::Enter => {
@@ -169,6 +176,7 @@ fn handle_key_press(app: &mut App, key: KeyEvent) {
                             1 => "slate".to_string(),
                             _ => "zinc".to_string(),
                         };
+                        app.config.strip_exif = settings_view.strip_exif;
                         let _ = app.config.save();
                         app.refresh_localization();
                         app.mode = AppMode::Normal;
@@ -270,10 +278,11 @@ fn handle_key_press(app: &mut App, key: KeyEvent) {
                 let output_format = format.to_image_format();
 
                 let output_path = PathBuf::from(format!("{}.{}", file_name, format.extension()));
-                match app
-                    .cached_image
-                    .save_with_format(&output_path, output_format)
-                {
+                match app.hdim_image.save_with_exif(
+                    &output_path,
+                    output_format,
+                    app.config.strip_exif,
+                ) {
                     Ok(_) => {
                         app.mark_saved();
                     }

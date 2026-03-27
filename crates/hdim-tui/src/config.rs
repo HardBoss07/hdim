@@ -23,6 +23,7 @@ impl Language {
 pub struct Config {
     pub language: Language,
     pub theme: String, // Placeholder for future theme selection
+    pub strip_exif: bool,
 }
 
 impl Default for Config {
@@ -30,6 +31,7 @@ impl Default for Config {
         Self {
             language: Language::English,
             theme: "zinc".to_string(),
+            strip_exif: true,
         }
     }
 }

@@ -11,6 +11,7 @@ pub struct SettingsView {
     pub selected_index: usize,
     pub selected_language: Language,
     pub selected_theme_index: usize,
+    pub strip_exif: bool,
 }
 
 impl SettingsView {
@@ -25,6 +26,7 @@ impl SettingsView {
             selected_index: 0,
             selected_language: app.config.language.clone(),
             selected_theme_index: theme_index,
+            strip_exif: app.config.strip_exif,
         }
     }
 
@@ -40,7 +42,8 @@ impl SettingsView {
             .constraints([
                 Constraint::Length(3), // Language
                 Constraint::Length(3), // Theme
-                Constraint::Length(2), // Spacing
+                Constraint::Length(3), // Strip EXIF
+                Constraint::Length(1), // Spacing
                 Constraint::Length(1), // Help/Actions
             ])
             .split(area);
@@ -97,6 +100,26 @@ impl SettingsView {
             .block(theme_block)
             .render(layout[1], buf);
 
+        // Strip EXIF Toggle
+        let strip_label = if self.strip_exif { " [ON] " } else { " [OFF] " };
+        let strip_spans = vec![
+            Span::raw(&loc.strip_exif),
+            Span::styled(strip_label, styles.highlight),
+        ];
+
+        let strip_block = Block::default()
+            .borders(Borders::ALL)
+            .border_type(BorderType::Rounded)
+            .border_style(if self.selected_index == 2 {
+                styles.border_active
+            } else {
+                styles.border
+            });
+
+        Paragraph::new(Line::from(strip_spans))
+            .block(strip_block)
+            .render(layout[2], buf);
+
         // Help / Actions
         let actions = Line::from(vec![
             Span::styled(&loc.save, styles.highlight),
@@ -105,6 +128,6 @@ impl SettingsView {
         ]);
         Paragraph::new(actions)
             .alignment(Alignment::Center)
-            .render(layout[3], buf);
+            .render(layout[4], buf);
     }
 }
