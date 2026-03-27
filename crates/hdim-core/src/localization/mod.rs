@@ -21,6 +21,7 @@ pub struct Settings {
     pub title: String,
     pub language: String,
     pub theme: String,
+    pub strip_exif: String,
     pub save: String,
     pub cancel: String,
 }

@@ -85,6 +85,7 @@ pub fn get_localization() -> Localization {
             title: " EINSTELLUNGEN ".to_string(),
             language: "Sprache: ".to_string(),
             theme: "Farbschema: ".to_string(),
+            strip_exif: "Sensible EXIF entfernen: ".to_string(),
             save: "[S] Speichern".to_string(),
             cancel: "[Esc] Abbrechen".to_string(),
         },
