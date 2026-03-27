@@ -50,6 +50,8 @@ pub enum AppMode {
     Saving,
     /// Confirming quit with unsaved changes.
     ConfirmQuit,
+    /// Confirming cancel transform with unapplied changes.
+    ConfirmTransformCancel,
     /// Settings screen.
     Settings,
 }
@@ -112,6 +114,8 @@ pub struct App {
     pub palette: Palette,
     /// Current UI styles.
     pub styles: ThemeStyles,
+    /// Whether there are transform changes that haven't been applied yet.
+    pub has_unapplied_transform: bool,
 }
 
 impl App {
@@ -160,6 +164,7 @@ impl App {
             settings_view: None,
             palette,
             styles,
+            has_unapplied_transform: false,
         })
     }
 

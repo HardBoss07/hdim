@@ -1,5 +1,6 @@
 use crate::app::{App, AppMode};
 use crossterm::event::{KeyCode, KeyEvent};
+use ratatui::prelude::*;
 use ratatui::widgets::{Block, BorderType, Borders, List, ListItem};
 
 pub fn render_transform_options<'a>(app: &'a App) -> List<'a> {
@@ -20,7 +21,8 @@ pub fn render_transform_options<'a>(app: &'a App) -> List<'a> {
         .iter()
         .enumerate()
         .map(|(i, &option)| {
-            let mut text = match i {
+            let is_selected = app.selected_transform_option_index == i;
+            let mut spans = vec![Span::raw(match i {
                 0..=3 => {
                     let value = match i {
                         0 => app.transform_state.left,
@@ -54,16 +56,30 @@ pub fn render_transform_options<'a>(app: &'a App) -> List<'a> {
                     )
                 }
                 _ => option.to_string(),
-            };
+            })];
 
-            if app.mode == AppMode::EditingTransformValue
-                && app.selected_transform_option_index == i
-            {
-                text.push_str(&format!(" {}", app.transform_input));
+            if app.mode == AppMode::EditingTransformValue && is_selected {
+                spans.push(Span::styled(
+                    format!(" {}", app.transform_input),
+                    Style::default().fg(Color::Yellow),
+                ));
+            } else if is_selected {
+                let tooltip = match i {
+                    0..=3 => " (Enter to edit)",
+                    4..=8 => " (Enter to toggle)",
+                    9 => " (Enter to apply)",
+                    _ => "",
+                };
+                spans.push(Span::styled(
+                    tooltip,
+                    Style::default()
+                        .fg(Color::Gray)
+                        .add_modifier(Modifier::ITALIC),
+                ));
             }
 
-            let mut item = ListItem::new(text);
-            if app.selected_transform_option_index == i {
+            let mut item = ListItem::new(Line::from(spans));
+            if is_selected {
                 item = item.style(app.styles.highlight);
             }
             item
@@ -106,6 +122,7 @@ pub fn handle_transform_events(key: KeyEvent, app: &mut App) {
                     3 => app.transform_state.bottom = value,
                     _ => {}
                 }
+                app.has_unapplied_transform = true;
                 app.transform_input.clear();
                 app.mode = AppMode::Normal;
             }
@@ -136,21 +153,26 @@ pub fn handle_transform_events(key: KeyEvent, app: &mut App) {
                         // Rotate Left
                         app.transform_state.rotation =
                             (app.transform_state.rotation - 90 + 360) % 360;
+                        app.has_unapplied_transform = true;
                     }
                     5 => {
                         // Rotate Right
                         app.transform_state.rotation = (app.transform_state.rotation + 90) % 360;
+                        app.has_unapplied_transform = true;
                     }
                     6 => {
                         // Flip Horizontal
                         app.transform_state.flip_horizontal = !app.transform_state.flip_horizontal;
+                        app.has_unapplied_transform = true;
                     }
                     7 => {
                         // Flip Vertical
                         app.transform_state.flip_vertical = !app.transform_state.flip_vertical;
+                        app.has_unapplied_transform = true;
                     }
                     8 => {
                         app.crop_from_viewport();
+                        app.has_unapplied_transform = true;
                     }
                     9 => {
                         // Apply Transform
@@ -158,12 +180,22 @@ pub fn handle_transform_events(key: KeyEvent, app: &mut App) {
                         app.hdim_image.transform_image(&transform_state);
                         // Reset transform state after applying
                         app.transform_state = hdim_core::state::TransformState::default();
+                        app.has_unapplied_transform = false;
                         app.update_adjustments(); // Refresh cache
                         app.selected_tool = None;
                         app.mode = AppMode::Normal;
                         app.active_widget = crate::app::ActiveWidget::Main;
                     }
                     _ => {}
+                }
+            }
+            KeyCode::Esc => {
+                if app.has_unapplied_transform {
+                    app.mode = AppMode::ConfirmTransformCancel;
+                } else {
+                    app.selected_tool = None;
+                    app.active_widget = crate::app::ActiveWidget::Main;
+                    app.show_right_toolbar = false;
                 }
             }
             _ => {}
