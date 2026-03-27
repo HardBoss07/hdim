@@ -21,6 +21,17 @@ impl ExifView {
     pub fn widget<'a>(&self, loc: &'a ExifLocalization) -> List<'a> {
         let mut items = Vec::new();
 
+        if self.exif_data.is_empty() {
+            items.push(
+                ListItem::new(loc.no_data.clone()).style(
+                    Style::default()
+                        .fg(Color::Gray)
+                        .add_modifier(Modifier::ITALIC),
+                ),
+            );
+            return List::new(items);
+        }
+
         // General Info
         items.push(
             ListItem::new(loc.general.clone()).style(Style::default().add_modifier(Modifier::BOLD)),

@@ -140,13 +140,13 @@ The workspace is defined in the root `Cargo.toml`.
 
 ### Phase 10: Bug Fixes & UI Consistency
 
-- [ ] **hdim-tui**: Fix keybind overlap so typing values (like '1') in adjustment settings does not trigger tool shortcuts.
-- [ ] **hdim-tui**: Enable holding `Ctrl` while adjusting tool values to increment/decrement by 10 directly.
-- [ ] **hdim-tui**: Add "No Metadata found" placeholder text in EXIF view when metadata is empty.
-- [ ] **hdim-tui**: Remove FULL CAPS LOCK on all UI labels (excluding app state / app name labels).
-- [ ] **hdim-tui**: Fix top label cropping in the Adjustment sidebar caused by overlap with the main title.
-- [ ] **hdim-tui**: Standardize border types (rounded vs. sharp) across all sidebar tools to ensure visual consistency.
-- [ ] **hdim-tui**: Implement "Soft Apply" for Transform options: dynamically update the viewport during adjustment, but require an explicit "Apply" action to finalize (including a warning popup for unapplied changes).
+- [x] **hdim-tui**: Fix keybind overlap so typing values (like '1') in adjustment settings does not trigger tool shortcuts.
+- [x] **hdim-tui**: Enable holding `Ctrl` while adjusting tool values to increment/decrement by 10 directly.
+- [x] **hdim-tui**: Add "No Metadata found" placeholder text in EXIF view when metadata is empty.
+- [x] **hdim-tui**: Remove FULL CAPS LOCK on all UI labels (excluding app state / app name labels).
+- [x] **hdim-tui**: Fix top label cropping in the Adjustment sidebar caused by overlap with the main title.
+- [x] **hdim-tui**: Standardize border types (rounded vs. sharp) across all sidebar tools to ensure visual consistency.
+- [x] **hdim-tui**: Implement "Soft Apply" for Transform options: dynamically update the viewport during adjustment, but require an explicit "Apply" action to finalize (including a warning popup for unapplied changes).
 
 ### Phase 11: Performance & Memory Optimization
 
