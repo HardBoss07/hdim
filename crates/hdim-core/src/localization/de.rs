@@ -3,7 +3,7 @@ use super::*;
 pub fn get_localization() -> Localization {
     Localization {
         tools: Tools {
-            title: " WERKZEUGE ".to_string(),
+            title: " Werkzeuge ".to_string(),
             transform: "Transformieren".to_string(),
             metadata: "Metadaten".to_string(),
             export: "Exportieren".to_string(),
@@ -18,6 +18,7 @@ pub fn get_localization() -> Localization {
             exporting: " EXPORTIEREN ".to_string(),
             confirm_quit: " BEENDEN BESTÄTIGEN ".to_string(),
             hint_adjust: "↑/↓ Wählen • ←/→ Anpassen • Enter Manuell • Esc Zurück".to_string(),
+            hint_transform: "↑/↓ Wählen • Enter Umschalten/Bearbeiten • Esc Zurück".to_string(),
             hint_normal: "Pfeiltasten Bewegen • PgUp/Dn Zoom • 1-4 Werkzeuge • Ctrl+q Beenden"
                 .to_string(),
         },
@@ -39,7 +40,8 @@ pub fn get_localization() -> Localization {
             warmth: "Wärme".to_string(),
         },
         exif: Exif {
-            title: " EXIF Daten ".to_string(),
+            title: " Exif-Daten ".to_string(),
+            no_data: " Keine Metadaten gefunden ".to_string(),
             general: "Allgemein:".to_string(),
             date_time: "  Zeitpunkt: ".to_string(),
             camera: "Kamera:".to_string(),
@@ -73,21 +75,24 @@ pub fn get_localization() -> Localization {
             flip_vertical: "Vertikal spiegeln".to_string(),
             from_viewport: "Aus Ansicht zuschneiden".to_string(),
             apply: "Transformation anwenden".to_string(),
+            confirm_cancel: " Unangewendete Änderungen ".to_string(),
+            confirm_cancel_msg: "Sie haben unangewendete Transformationsänderungen. Verwerfen?"
+                .to_string(),
         },
         export: Export {
-            title: " BILD EXPORTIEREN ".to_string(),
+            title: " Bild exportieren ".to_string(),
             select_format: "Format wählen:".to_string(),
             filename: "Dateiname: ".to_string(),
         },
         confirm_quit: ConfirmQuit {
-            title: " UNGESPEICHERTE ÄNDERUNGEN ".to_string(),
+            title: " Ungespeicherte Änderungen ".to_string(),
             message: "Sie haben ungespeicherte Änderungen.".to_string(),
             question: "Sind Sie sicher, dass Sie beenden möchten?".to_string(),
             yes: "[Y] Ja (Beenden)".to_string(),
             no: "[N] Nein (Abbrechen)".to_string(),
         },
         settings: Settings {
-            title: " EINSTELLUNGEN ".to_string(),
+            title: " Einstellungen ".to_string(),
             language: "Sprache: ".to_string(),
             theme: "Farbschema: ".to_string(),
             strip_exif: "Sensible EXIF entfernen: ".to_string(),

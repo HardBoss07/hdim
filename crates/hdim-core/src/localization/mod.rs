@@ -45,6 +45,7 @@ pub struct Status {
     pub exporting: String,
     pub confirm_quit: String,
     pub hint_adjust: String,
+    pub hint_transform: String,
     pub hint_normal: String,
 }
 
@@ -72,6 +73,7 @@ pub struct Adjustments {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Exif {
     pub title: String,
+    pub no_data: String,
     pub general: String,
     pub date_time: String,
     pub camera: String,
@@ -107,6 +109,8 @@ pub struct Transform {
     pub flip_vertical: String,
     pub from_viewport: String,
     pub apply: String,
+    pub confirm_cancel: String,
+    pub confirm_cancel_msg: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

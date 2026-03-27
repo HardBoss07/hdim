@@ -3,7 +3,7 @@ use super::*;
 pub fn get_localization() -> Localization {
     Localization {
         tools: Tools {
-            title: " TOOLS ".to_string(),
+            title: " Tools ".to_string(),
             transform: "Transform".to_string(),
             metadata: "Metadata".to_string(),
             export: "Export".to_string(),
@@ -18,6 +18,7 @@ pub fn get_localization() -> Localization {
             exporting: " EXPORTING ".to_string(),
             confirm_quit: " CONFIRM QUIT ".to_string(),
             hint_adjust: "↑/↓ Select • ←/→ Adjust • Enter Manual • Esc Back".to_string(),
+            hint_transform: "↑/↓ Select • Enter Toggle/Edit • Esc Back".to_string(),
             hint_normal: "Arrows Pan • PgUp/Dn Zoom • 1-4 Tools • Ctrl+q Quit".to_string(),
         },
         common: Common {
@@ -38,7 +39,8 @@ pub fn get_localization() -> Localization {
             warmth: "Warmth".to_string(),
         },
         exif: Exif {
-            title: " EXIF Data ".to_string(),
+            title: " Exif Data ".to_string(),
+            no_data: " No Metadata found ".to_string(),
             general: "General:".to_string(),
             date_time: "  Date Time: ".to_string(),
             camera: "Camera:".to_string(),
@@ -72,21 +74,23 @@ pub fn get_localization() -> Localization {
             flip_vertical: "Flip Vertical".to_string(),
             from_viewport: "Crop from viewport".to_string(),
             apply: "Apply Transform".to_string(),
+            confirm_cancel: " Unapplied Changes ".to_string(),
+            confirm_cancel_msg: "You have unapplied transform changes. Discard?".to_string(),
         },
         export: Export {
-            title: " EXPORT IMAGE ".to_string(),
+            title: " Export Image ".to_string(),
             select_format: "Select format:".to_string(),
             filename: "Filename: ".to_string(),
         },
         confirm_quit: ConfirmQuit {
-            title: " UNSAVED CHANGES ".to_string(),
+            title: " Unsaved Changes ".to_string(),
             message: "You have unsaved changes.".to_string(),
             question: "Are you sure you want to quit?".to_string(),
             yes: "[Y] Yes (Quit)".to_string(),
             no: "[N] No (Cancel)".to_string(),
         },
         settings: Settings {
-            title: " SETTINGS ".to_string(),
+            title: " Settings ".to_string(),
             language: "Language: ".to_string(),
             theme: "Theme: ".to_string(),
             strip_exif: "Strip sensitive EXIF: ".to_string(),

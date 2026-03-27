@@ -48,4 +48,15 @@ impl ExifData {
             image: get_image_exif(&exif),
         })
     }
+
+    /// Returns true if all metadata fields are None.
+    pub fn is_empty(&self) -> bool {
+        self.orientation.is_none()
+            && self.datetime.is_none()
+            && self.camera.is_none()
+            && self.exposure.is_none()
+            && self.lens.is_none()
+            && self.gps.is_none()
+            && self.image.is_none()
+    }
 }
