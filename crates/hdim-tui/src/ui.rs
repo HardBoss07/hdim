@@ -50,6 +50,10 @@ pub fn render(frame: &mut Frame, app: &mut App) {
         render_confirm_quit_popup(frame, app);
     }
 
+    if let AppMode::ConfirmTransformCancel = app.mode {
+        render_confirm_transform_cancel_popup(frame, app);
+    }
+
     if let AppMode::Settings = app.mode {
         render_settings_popup(frame, app);
     }
@@ -170,7 +174,13 @@ fn render_image_window(frame: &mut Frame, app: &mut App, area: Rect) {
         target_height: area.height as u32,
     };
 
-    let image_text = match hdim_render::render(&app.cached_image, &view) {
+    let preview_image = if app.has_unapplied_transform {
+        hdim_core::transform::apply_transform(&app.cached_image, &app.transform_state)
+    } else {
+        app.cached_image.clone()
+    };
+
+    let image_text = match hdim_render::render(&preview_image, &view) {
         Ok(ansi_string) => ansi_string.into_text().unwrap_or_default(),
         Err(_) => app
             .localization
@@ -334,6 +344,9 @@ fn render_exif_sidebar(frame: &mut Frame, app: &mut App, area: Rect) {
         let mut list = exif_view.widget(&app.localization.exif);
         list = list.highlight_style(app.styles.highlight).block(
             Block::default()
+                .borders(Borders::ALL)
+                .border_type(BorderType::Rounded)
+                .border_style(app.styles.border)
                 .title(app.localization.exif.title.as_str())
                 .title_style(app.styles.text_dim),
         );
@@ -359,12 +372,19 @@ fn render_status_line(frame: &mut Frame, app: &App, area: Rect) {
         AppMode::ExifView => app.localization.status.metadata.as_str(),
         AppMode::Saving => app.localization.status.exporting.as_str(),
         AppMode::ConfirmQuit => app.localization.status.confirm_quit.as_str(),
+        AppMode::ConfirmTransformCancel => app.localization.transform.confirm_cancel.as_str(),
         AppMode::Settings => app.localization.settings.title.as_str(),
     };
 
     let hint = match app.active_widget {
         ActiveWidget::Adjustments => app.localization.status.hint_adjust.as_str(),
-        _ => app.localization.status.hint_normal.as_str(),
+        _ => {
+            if let Some(Tool::Transform) = app.selected_tool {
+                app.localization.status.hint_transform.as_str()
+            } else {
+                app.localization.status.hint_normal.as_str()
+            }
+        }
     };
 
     let status_line = Line::from(vec![
@@ -434,6 +454,52 @@ fn render_confirm_quit_popup(frame: &mut Frame, app: &App) {
         )),
         Line::from(""),
         Line::from(app.localization.confirm_quit.question.as_str()),
+        Line::from(""),
+        Line::from(vec![
+            Span::styled(
+                app.localization.confirm_quit.yes.as_str(),
+                app.styles.highlight,
+            ),
+            Span::raw("   "),
+            Span::styled(
+                app.localization.confirm_quit.no.as_str(),
+                app.styles.highlight,
+            ),
+        ]),
+    ];
+
+    let paragraph = Paragraph::new(text)
+        .block(block)
+        .alignment(Alignment::Center);
+
+    frame.render_widget(paragraph, popup_area);
+}
+
+/// Renders the confirmation popup for canceling unapplied transformations.
+fn render_confirm_transform_cancel_popup(frame: &mut Frame, app: &App) {
+    let size = frame.area();
+    let popup_area = Rect::new(
+        size.width.saturating_sub(60) / 2,
+        size.height.saturating_sub(8) / 2,
+        60,
+        8,
+    );
+
+    frame.render_widget(Clear, popup_area);
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .border_type(BorderType::Rounded)
+        .border_style(app.styles.border_active)
+        .title(app.localization.transform.confirm_cancel.as_str())
+        .title_alignment(Alignment::Center);
+
+    let text = vec![
+        Line::from(Span::styled(
+            app.localization.transform.confirm_cancel_msg.as_str(),
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD),
+        )),
         Line::from(""),
         Line::from(vec![
             Span::styled(

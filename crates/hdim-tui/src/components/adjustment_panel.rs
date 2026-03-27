@@ -1,11 +1,11 @@
 use super::sliders::slider::Slider;
 use crate::theme::ThemeStyles;
-use crossterm::event::{KeyCode, KeyEvent};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use hdim_core::Adjustments;
 use hdim_core::localization::Adjustments as AdjustmentsLocalization;
 use ratatui::{
     prelude::*,
-    widgets::{Block, Borders, Paragraph},
+    widgets::{Block, BorderType, Borders, Paragraph},
 };
 
 pub enum AdjustmentsChange {
@@ -80,11 +80,21 @@ impl AdjustmentPanel {
                 }
             }
             KeyCode::Left => {
-                self.sliders[self.selected_index].decrement(1.0);
+                let amount = if key.modifiers.contains(KeyModifiers::CONTROL) {
+                    10.0
+                } else {
+                    1.0
+                };
+                self.sliders[self.selected_index].decrement(amount);
                 return Some(AdjustmentsChange::Updated);
             }
             KeyCode::Right => {
-                self.sliders[self.selected_index].increment(1.0);
+                let amount = if key.modifiers.contains(KeyModifiers::CONTROL) {
+                    10.0
+                } else {
+                    1.0
+                };
+                self.sliders[self.selected_index].increment(amount);
                 return Some(AdjustmentsChange::Updated);
             }
             KeyCode::Enter => {
@@ -143,6 +153,7 @@ impl AdjustmentPanel {
     ) {
         let layout = Layout::default()
             .direction(Direction::Vertical)
+            .margin(1) // Add margin inside the main block to avoid overlap with title
             .constraints(
                 self.sliders
                     .iter()
@@ -173,6 +184,7 @@ impl AdjustmentPanel {
 
         let block = Block::default()
             .borders(Borders::ALL)
+            .border_type(BorderType::Rounded)
             .title(loc.title.as_str())
             .border_style(styles.border);
 
