@@ -49,6 +49,25 @@ pub fn handle_events(app: &mut App) -> Result<bool> {
                     }
                 }
 
+                if app.mode == AppMode::ConfirmTransformCancel {
+                    match key.code {
+                        KeyCode::Char('y') | KeyCode::Enter => {
+                            app.has_unapplied_transform = false;
+                            app.transform_state = hdim_core::state::TransformState::default();
+                            app.selected_tool = None;
+                            app.active_widget = ActiveWidget::Main;
+                            app.mode = AppMode::Normal;
+                            app.show_right_toolbar = false;
+                            return Ok(false);
+                        }
+                        KeyCode::Char('n') | KeyCode::Esc => {
+                            app.mode = AppMode::Normal;
+                            return Ok(false);
+                        }
+                        _ => return Ok(false),
+                    }
+                }
+
                 handle_key_press(app, key);
 
                 // Global Quit Handler (Ctrl+q)
@@ -121,10 +140,12 @@ fn handle_key_press(app: &mut App, key: KeyEvent) {
         }
     }
 
-    // Global tool switching (available in most modes except Saving and ConfirmQuit and Settings)
+    // Global tool switching (available in most modes except Saving, ConfirmQuit, Settings, and Editing)
     if app.mode != AppMode::Saving
         && app.mode != AppMode::ConfirmQuit
         && app.mode != AppMode::Settings
+        && app.mode != AppMode::EditingAdjustmentValue
+        && app.mode != AppMode::EditingTransformValue
     {
         match key.code {
             KeyCode::Char('1') => {
@@ -182,7 +203,7 @@ fn handle_key_press(app: &mut App, key: KeyEvent) {
     }
 
     match app.mode {
-        AppMode::ConfirmQuit => {
+        AppMode::ConfirmQuit | AppMode::ConfirmTransformCancel => {
             // Handled in handle_events, but required for exhaustiveness
         }
         AppMode::Settings => {
