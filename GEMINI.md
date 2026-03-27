@@ -25,9 +25,9 @@ The workspace is defined in the root `Cargo.toml`.
 **Purpose:** Pure data manipulation, EXIF parsing, and state management.
 
 - **Modules:**
-- `src/exif/`: Comprehensive EXIF data handling (`camera.rs`, `gps.rs`, `exposure.rs`, etc.) using `kamadak-exif`.
-- `src/state.rs`: Manages the current editing session state (`CropState`, `Tool`).
-- `src/lib.rs`: Entry point defining `HdimImage`.
+  - `src/exif/`: Comprehensive EXIF data handling (`camera.rs`, `gps.rs`, `exposure.rs`, etc.) using `kamadak-exif`.
+  - `src/state.rs`: Manages the current editing session state (`CropState`, `Tool`).
+  - `src/lib.rs`: Entry point defining `HdimImage`.
 
 - **Testing:** Unit tests (e.g., `tests/resizing.rs`).
 
@@ -36,38 +36,38 @@ The workspace is defined in the root `Cargo.toml`.
 **Purpose:** Translating image buffers into terminal-renderable cells.
 
 - **Modules:**
-- `src/pixel.rs`: Logic for pixel data handling and color conversion.
-- `src/view.rs`: Viewport management for rendering specific sections of an image.
+  - `src/pixel.rs`: Logic for pixel data handling and color conversion.
+  - `src/view.rs`: Viewport management for rendering specific sections of an image.
 
 - **Testing:** Heavily relies on **Snapshot Testing** using `insta`.
-- `tests/images/`: Test assets (4k.jpg, WindowsXP.png).
-- `tests/snapshots/`: Stored snap files verifying render output consistency.
+  - `tests/images/`: Test assets (4k.jpg, WindowsXP.png).
+  - `tests/snapshots/`: Stored snap files verifying render output consistency.
 
 ### 3. hdim-tui (`crates/hdim-tui`)
 
 **Purpose:** The executable CLI/TUI application.
 
 - **Modules:**
-- `src/components/`: Modular UI widgets.
-- `crop.rs`: Crop tool logic.
-- `exif_view.rs`: EXIF data display widget.
+  - `src/components/`: Modular UI widgets.
+  - `transform.rs`: Transform tool logic (formerly crop.rs).
+  - `exif_view.rs`: EXIF data display widget.
 
-- `src/app.rs`: Application state (`AppMode`, `ActiveWidget`), zoom/scroll logic, and lifecycle management.
-- `src/events.rs`: Input event handling loop.
-- `src/ui.rs`: Main drawing logic using `ratatui`.
-- `src/main.rs`: Entry point, manual argument parsing (image path).
+  - `src/app.rs`: Application state (`AppMode`, `ActiveWidget`), zoom/scroll logic, and lifecycle management.
+  - `src/events.rs`: Input event handling loop.
+  - `src/ui.rs`: Main drawing logic using `ratatui`.
+  - `src/main.rs`: Entry point, manual argument parsing (image path).
 
 ## Data Flow
 
 1. **Load:** `hdim-tui` receives an image path, calls `hdim-core` to load the image and parse EXIF data.
 2. **View:** `hdim-render` takes the core image data and generates a view suitable for the current terminal size.
-3. **Interact:** User input acts on `hdim-tui` components (e.g., `crop.rs`).
+3. **Interact:** User input acts on `hdim-tui` components.
 4. **Modify:** Components send commands to `hdim-core` to mutate the state.
 5. **Verify:** Changes are rendered back via the render pipeline.
 
 ## Roadmap
 
-### Phase 1: Core Foundation & Metadata (Current)
+### Phase 1: Core Foundation & Metadata
 
 - [x] Workspace setup.
 - [x] **hdim-core**: EXIF data parsing implementation.
@@ -80,35 +80,37 @@ The workspace is defined in the root `Cargo.toml`.
 - [x] **hdim-tui**: Connect `exif_view.rs` to the render loop.
 - [x] **hdim-render**: Optimize rendering for high-res images (downscaling strategies).
 
-### Phase 3: Manipulation Components
+### Phase 3: Transform Tool Overhaul (Replacing Crop Tool)
 
-- [ ] **hdim-tui**: Complete `components/crop.rs` UI interaction.
-- [ ] **hdim-core**: Implement actual crop logic backing the UI.
-- [ ] **hdim-core**: Implement Rotate and Flip logic.
-- [ ] **hdim-tui**: Add UI components for Rotation/Flipping.
+- [ ] **hdim-tui**: Rename the Crop tool to "Transform Tool" (`components/transform.rs`).
+- [ ] **hdim-core**: Implement stackable 90° rotation logic (Left/Right) resulting in 90/180/270°.
+- [ ] **hdim-core**: Implement horizontal and vertical flipping logic.
+- [ ] **hdim-core**: Implement relative (%) and absolute (px) cropping (detect % in input).
+- [ ] **hdim-core & hdim-render**: Implement "Crop from viewport" (calculate absolute crop bounds based on current camera view).
+- [ ] **hdim-tui**: Render a consistent visual indicator (line) for where the viewport crop will cut off.
+- [ ] **hdim-core**: Implement the final "Apply Crop" execution.
+- [ ] **hdim-tui**: Retain all legacy crop features within the new Transform Tool UI.
 
-### Phase 4: Advanced Features
+### Phase 4: Color Adjustments & Base Undo/Redo
 
 - [x] **hdim-core**: Color adjustments (brightness, contrast) using `palette`.
-- [x] **hdim-core**: Undo/Redo stack.
+- [x] **hdim-core**: Base Undo/Redo stack setup.
 - [x] **hdim-tui**: Export/Save dialogs.
 
 ### Phase 5: Advanced Features & Image Adjustments
 
-- [x] **hdim-core**: Undo/Redo stack.
-- [x] **hdim-tui**: Export/Save dialogs.
-- [x] **hdim-core**: Implement the logic for the following adjustment sliders (Range: -100 to +100):
-- [x] **hdim-tui**: Implement the components with using the logic from `hdim-core`
-- [x] **Saturation** (using `palette`)
-- [x] **Vibrance**
-- [x] **Exposure**
-- [x] **Brightness**
-- [x] **Contrast**
-- [x] **Warmth**
-- [x] **Hue**
-- [x] **Fade**
-- [x] **Film Grain**
-- [x] **Noise**
+- [x] **hdim-core**: Implement the logic for the following adjustment sliders (Range: -100 to +100).
+- [x] **hdim-tui**: Implement the components using the logic from `hdim-core`.
+  - [x] **Saturation** (using `palette`)
+  - [x] **Vibrance**
+  - [x] **Exposure**
+  - [x] **Brightness**
+  - [x] **Contrast**
+  - [x] **Warmth**
+  - [x] **Hue**
+  - [x] **Fade**
+  - [x] **Film Grain**
+  - [x] **Noise**
 
 ### Phase 6: UI/UX Refinements & Safety
 
@@ -126,10 +128,28 @@ The workspace is defined in the root `Cargo.toml`.
 
 ### Phase 8: Export Polish & Adjustment Tweaks
 
-- [x] **hdim-core**: Overhaul EXIF data handling on export to optionally strip sensitive/unnecessary data (GPS, Camera models, Dates) while preserving essential dimensions (Width/Height).
+- [x] **hdim-core**: Overhaul EXIF data handling on export to optionally strip sensitive/unnecessary data while preserving dimensions.
 - [x] **hdim-core**: Refine **Noise** slider logic to exclusively add random RGB noise.
 - [x] **hdim-core**: Refine **Film Grain** slider logic to exclusively add random gray/luminance noise.
-- [x] **Documentation**: Adjust the modifier values and tool descriptions in the `GEMINI.md` README to reflect these new constraints/updating the old ones since some go from 0-100.
+- [x] **Documentation**: Adjust the modifier values and tool descriptions in the `GEMINI.md` README.
+
+### Phase 9: Global State & Keybinds
+
+- [ ] **hdim-core & hdim-tui**: Overhaul the Undo/Redo stack to be a global application feature, rather than limited to the adjustments tab.
+- [ ] **hdim-tui**: Allow `Ctrl+s` to open the save prompt globally from anywhere in the app (handle potential conflicts with undo/redo states).
+
+### Phase 10: Bug Fixes & UI Consistency
+
+- [ ] **hdim-tui**: Fix keybind overlap so typing values (like '1') in adjustment settings does not trigger tool shortcuts.
+- [ ] **hdim-tui**: Enable holding `Ctrl` while adjusting tool values to increment/decrement by 10 directly.
+- [ ] **hdim-tui**: Add "No Metadata found" placeholder text in EXIF view when metadata is empty.
+- [ ] **hdim-tui**: Enforce FULL CAPS LOCK on all UI labels (excluding app state labels).
+
+### Phase 11: Performance & Memory Optimization
+
+- [ ] **hdim-tui**: Fix "sticky" inputs (dropping keystrokes) while explicitly keeping the existing time scheduler intact to preserve exact number typing.
+- [ ] **hdim-render**: Optimize rendering to only occur when a change happens, eliminating the slowdown caused by recalculating every adjustment every frame.
+- [ ] **hdim-tui & hdim-render**: Investigate and fix the continuous 1-2MB/s memory leak while idling on an image (evaluate if this is a ratatui/crossterm issue with PowerShell or an internal allocation loop).
 
 ## Tools (Translation & Reference)
 
