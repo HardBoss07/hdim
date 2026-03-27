@@ -82,14 +82,14 @@ The workspace is defined in the root `Cargo.toml`.
 
 ### Phase 3: Transform Tool Overhaul (Replacing Crop Tool)
 
-- [ ] **hdim-tui**: Rename the Crop tool to "Transform Tool" (`components/transform.rs`).
-- [ ] **hdim-core**: Implement stackable 90° rotation logic (Left/Right) resulting in 90/180/270°.
-- [ ] **hdim-core**: Implement horizontal and vertical flipping logic.
-- [ ] **hdim-core**: Implement relative (%) and absolute (px) cropping (detect % in input).
-- [ ] **hdim-core & hdim-render**: Implement "Crop from viewport" (calculate absolute crop bounds based on current camera view).
-- [ ] **hdim-tui**: Render a consistent visual indicator (line) for where the viewport crop will cut off.
-- [ ] **hdim-core**: Implement the final "Apply Crop" execution.
-- [ ] **hdim-tui**: Retain all legacy crop features within the new Transform Tool UI.
+- [x] **hdim-tui**: Rename the Crop tool to "Transform Tool" (`components/transform.rs`).
+- [x] **hdim-core**: Implement stackable 90° rotation logic (Left/Right) resulting in 90/180/270°.
+- [x] **hdim-core**: Implement horizontal and vertical flipping logic.
+- [x] **hdim-core**: Implement relative (%) and absolute (px) cropping (detect % in input).
+- [x] **hdim-core & hdim-render**: Implement "Crop from viewport" (calculate absolute crop bounds based on current camera view).
+- [x] **hdim-tui**: Render a consistent visual indicator (line) for where the viewport crop will cut off.
+- [x] **hdim-core**: Implement the final "Apply Crop" execution.
+- [x] **hdim-tui**: Retain all legacy crop features within the new Transform Tool UI.
 
 ### Phase 4: Color Adjustments & Base Undo/Redo
 
@@ -144,6 +144,9 @@ The workspace is defined in the root `Cargo.toml`.
 - [ ] **hdim-tui**: Enable holding `Ctrl` while adjusting tool values to increment/decrement by 10 directly.
 - [ ] **hdim-tui**: Add "No Metadata found" placeholder text in EXIF view when metadata is empty.
 - [ ] **hdim-tui**: Enforce FULL CAPS LOCK on all UI labels (excluding app state labels).
+- [ ] **hdim-tui**: Fix top label cropping in the Adjustment sidebar caused by overlap with the main title.
+- [ ] **hdim-tui**: Standardize border types (rounded vs. sharp) across all sidebar tools to ensure visual consistency.
+- [ ] **hdim-tui**: Implement "Soft Apply" for Transform options: dynamically update the viewport during adjustment, but require an explicit "Apply" action to finalize (including a warning popup for unapplied changes).
 
 ### Phase 11: Performance & Memory Optimization
 
