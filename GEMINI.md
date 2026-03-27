@@ -126,10 +126,10 @@ The workspace is defined in the root `Cargo.toml`.
 
 ### Phase 8: Export Polish & Adjustment Tweaks
 
-- [ ] **hdim-core**: Overhaul EXIF data handling on export to optionally strip sensitive/unnecessary data (GPS, Camera models, Dates) while preserving essential dimensions (Width/Height).
-- [ ] **hdim-core**: Refine **Noise** slider logic to exclusively add random RGB noise.
-- [ ] **hdim-core**: Refine **Film Grain** slider logic to exclusively add random gray/luminance noise.
-- [ ] **Documentation**: Adjust the modifier values and tool descriptions in the `GEMINI.md` README to reflect these new constraints/updating the old ones since some go from 0-100.
+- [x] **hdim-core**: Overhaul EXIF data handling on export to optionally strip sensitive/unnecessary data (GPS, Camera models, Dates) while preserving essential dimensions (Width/Height).
+- [x] **hdim-core**: Refine **Noise** slider logic to exclusively add random RGB noise.
+- [x] **hdim-core**: Refine **Film Grain** slider logic to exclusively add random gray/luminance noise.
+- [x] **Documentation**: Adjust the modifier values and tool descriptions in the `GEMINI.md` README to reflect these new constraints/updating the old ones since some go from 0-100.
 
 ## Tools (Translation & Reference)
 
@@ -144,9 +144,9 @@ The following suite of tools—inspired by standard mobile editors—must be imp
 | **Contrast**   | Difference between light and dark areas.                 | -100 to +100 |
 | **Warmth**     | Shift between blue (cool) and yellow (warm) tones.       | -100 to +100 |
 | **Hue**        | Shifts the entire color spectrum.                        | -100 to +100 |
-| **Fade**       | Reduces contrast in shadows for a "matte" look.          | -100 to +100 |
-| **Film Grain** | Adds simulated analog texture.                           | -100 to +100 |
-| **Noise**      | Adds digital luminance/chroma noise.                     | -100 to +100 |
+| **Fade**       | Reduces contrast in shadows for a "matte" look.          | 0 to +100    |
+| **Film Grain** | Adds achromatic (gray) luminance noise.                  | 0 to +100    |
+| **Noise**      | Adds digital RGB noise.                                  | 0 to +100    |
 
 ## Tech Stack
 

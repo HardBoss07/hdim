@@ -3,8 +3,7 @@
 //! Adds film-like grain to the image by introducing random noise to the lightness component.
 
 use crate::consts::RNG_SEED;
-use image::{DynamicImage, GenericImage, Rgba};
-use palette::{FromColor, Lch, Srgb};
+use image::DynamicImage;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 
@@ -35,29 +34,18 @@ pub fn apply_grain(image: &DynamicImage, value: f32) -> DynamicImage {
     if value <= 0.0 {
         return image.clone();
     }
-    let mut cloned_image = image.clone();
-    let amount = value / 100.0 * 10.0; // Max lightness change
+    let mut rgba_image = image.to_rgba8();
+    let amount = (value * 2.55) as i16; // Scale 0-100 to 0-255 range
     let mut rng = StdRng::seed_from_u64(RNG_SEED);
 
-    for (x, y, pixel) in cloned_image.to_rgba8().enumerate_pixels() {
-        let srgb = Srgb::new(
-            pixel[0] as f32 / 255.0,
-            pixel[1] as f32 / 255.0,
-            pixel[2] as f32 / 255.0,
-        );
+    for pixel in rgba_image.pixels_mut() {
+        let gray_noise = rng.gen_range(-amount..amount);
 
-        let mut lch: Lch = Lch::from_color(srgb);
-        let noise = rng.gen_range(-amount..amount);
-        lch.l += noise;
-
-        let new_srgb = Srgb::from_color(lch);
-
-        let r = (new_srgb.red * 255.0).round().clamp(0.0, 255.0) as u8;
-        let g = (new_srgb.green * 255.0).round().clamp(0.0, 255.0) as u8;
-        let b = (new_srgb.blue * 255.0).round().clamp(0.0, 255.0) as u8;
-
-        cloned_image.put_pixel(x, y, Rgba([r, g, b, pixel[3]]));
+        // Apply same noise to all channels for gray/luminance noise
+        pixel[0] = (pixel[0] as i16 + gray_noise).clamp(0, 255) as u8;
+        pixel[1] = (pixel[1] as i16 + gray_noise).clamp(0, 255) as u8;
+        pixel[2] = (pixel[2] as i16 + gray_noise).clamp(0, 255) as u8;
     }
 
-    cloned_image
+    DynamicImage::ImageRgba8(rgba_image)
 }
