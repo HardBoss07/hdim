@@ -5,7 +5,7 @@
 //! and delegates rendering to specialized helper functions.
 
 use crate::app::{ActiveWidget, App, AppMode};
-use crate::components::crop::render_crop_options;
+use crate::components::transform::render_transform_options;
 use ansi_to_tui::IntoText;
 use hdim_core::state::Tool;
 use hdim_core::utils::file_name_from_path;
@@ -114,7 +114,7 @@ fn calculate_sidebar_width(app: &App) -> u16 {
 fn render_left_sidebar(frame: &mut Frame, app: &App, area: Rect) {
     let loc_tools = &app.localization.tools;
     let tools = vec![
-        ("1", loc_tools.crop.as_str(), Tool::Crop),
+        ("1", loc_tools.transform.as_str(), Tool::Transform),
         ("2", loc_tools.metadata.as_str(), Tool::Exif),
         ("3", loc_tools.export.as_str(), Tool::Exif), // Using tool as placeholder
         ("4", loc_tools.adjust.as_str(), Tool::Exif),
@@ -127,7 +127,7 @@ fn render_left_sidebar(frame: &mut Frame, app: &App, area: Rect) {
             let style = if (app.active_widget == ActiveWidget::Tools)
                 || (name == loc_tools.adjust && app.active_widget == ActiveWidget::Adjustments)
                 || (name == loc_tools.metadata && app.mode == AppMode::ExifView)
-                || (name == loc_tools.crop && app.selected_tool == Some(Tool::Crop))
+                || (name == loc_tools.transform && app.selected_tool == Some(Tool::Transform))
                 || (key == "5" && app.mode == AppMode::Settings)
             {
                 app.styles.highlight
@@ -188,10 +188,94 @@ fn render_image_window(frame: &mut Frame, app: &mut App, area: Rect) {
 
     frame.render_widget(
         Paragraph::new(image_text)
-            .block(block)
+            .block(block.clone())
             .style(app.styles.base),
         area,
     );
+
+    // Render crop preview lines if Transform tool is selected
+    if let Some(Tool::Transform) = app.selected_tool {
+        let inner_area = block.inner(area);
+        render_crop_preview(frame, app, inner_area, &view);
+    }
+}
+
+/// Renders visual indicators for the current crop boundaries.
+fn render_crop_preview(frame: &mut Frame, app: &App, area: Rect, view: &View) {
+    let ts = &app.transform_state;
+    if ts.left == 0 && ts.right == 0 && ts.top == 0 && ts.bottom == 0 {
+        return;
+    }
+
+    let img_w = app.hdim_image.width;
+    let img_h = app.hdim_image.height;
+
+    // Helper to convert source pixel to local area coordinate
+    let to_local_x = |px: u32| -> Option<u16> {
+        if px < view.source_x || px >= view.source_x + view.source_width {
+            None
+        } else {
+            let rel_x = (px - view.source_x) as f32 / view.source_width as f32;
+            Some((rel_x * area.width as f32) as u16)
+        }
+    };
+
+    let to_local_y = |py: u32| -> Option<u16> {
+        if py < view.source_y || py >= view.source_y + view.source_height {
+            None
+        } else {
+            let rel_y = (py - view.source_y) as f32 / view.source_height as f32;
+            Some((rel_y * area.height as f32) as u16)
+        }
+    };
+
+    let style = Style::default()
+        .fg(app.palette.accent)
+        .add_modifier(Modifier::BOLD);
+
+    // Left line
+    if ts.left > 0 {
+        if let Some(lx) = to_local_x(ts.left) {
+            for y in 0..area.height {
+                frame
+                    .buffer_mut()
+                    .set_string(area.x + lx, area.y + y, "│", style);
+            }
+        }
+    }
+
+    // Right line
+    if ts.right > 0 {
+        if let Some(rx) = to_local_x(img_w.saturating_sub(ts.right)) {
+            for y in 0..area.height {
+                frame
+                    .buffer_mut()
+                    .set_string(area.x + rx, area.y + y, "│", style);
+            }
+        }
+    }
+
+    // Top line
+    if ts.top > 0 {
+        if let Some(ty) = to_local_y(ts.top) {
+            for x in 0..area.width {
+                frame
+                    .buffer_mut()
+                    .set_string(area.x + x, area.y + ty, "─", style);
+            }
+        }
+    }
+
+    // Bottom line
+    if ts.bottom > 0 {
+        if let Some(by) = to_local_y(img_h.saturating_sub(ts.bottom)) {
+            for x in 0..area.width {
+                frame
+                    .buffer_mut()
+                    .set_string(area.x + x, area.y + by, "─", style);
+            }
+        }
+    }
 }
 
 /// Renders the context-sensitive right sidebar.
@@ -235,8 +319,8 @@ fn render_tool_sidebar(frame: &mut Frame, app: &mut App, area: Rect) {
     match app.mode {
         AppMode::ExifView => render_exif_sidebar(frame, app, area),
         _ => {
-            if let Some(Tool::Crop) = app.selected_tool {
-                frame.render_widget(render_crop_options(app), area);
+            if let Some(Tool::Transform) = app.selected_tool {
+                frame.render_widget(render_transform_options(app), area);
             } else {
                 render_sidebar_placeholder(frame, app, area);
             }
@@ -271,7 +355,7 @@ fn render_status_line(frame: &mut Frame, app: &App, area: Rect) {
     let mode_str = match app.mode {
         AppMode::Normal => app.localization.status.normal.as_str(),
         AppMode::EditingAdjustmentValue => app.localization.status.edit_value.as_str(),
-        AppMode::EditingCropValue => app.localization.status.crop.as_str(),
+        AppMode::EditingTransformValue => app.localization.status.transform.as_str(),
         AppMode::ExifView => app.localization.status.metadata.as_str(),
         AppMode::Saving => app.localization.status.exporting.as_str(),
         AppMode::ConfirmQuit => app.localization.status.confirm_quit.as_str(),
