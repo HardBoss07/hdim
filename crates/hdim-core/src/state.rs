@@ -13,7 +13,7 @@ pub enum Tool {
 }
 
 /// Represents the state of the transform tool operation.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct TransformState {
     /// Pixels to remove from the left edge.
     pub left: u32,
