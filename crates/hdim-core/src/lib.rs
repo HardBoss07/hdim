@@ -13,7 +13,7 @@ pub mod localization;
 pub mod state;
 pub mod transform;
 pub mod utils;
-use crate::history::history::History;
+use crate::history::History;
 use crate::state::TransformState;
 use anyhow::Result;
 use image::{DynamicImage, GenericImageView};

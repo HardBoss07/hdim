@@ -29,7 +29,6 @@ hdim/
 │   │   │   │   ├── save.rs
 │   │   │   │   └── util.rs
 │   │   │   ├── history/
-│   │   │   │   ├── history.rs
 │   │   │   │   └── mod.rs
 │   │   │   ├── localization/
 │   │   │   │   ├── de.rs
@@ -43,7 +42,8 @@ hdim/
 │   │   │   └── utils.rs
 │   │   ├── tests/
 │   │   │   └── resizing.rs
-│   │   └── Cargo.toml
+│   │   ├── Cargo.toml
+│   │   └── README.md
 │   ├── hdim-render/
 │   │   ├── src/
 │   │   │   ├── lib.rs
@@ -63,7 +63,8 @@ hdim/
 │   │   │   ├── complex_image.rs
 │   │   │   ├── image_file.rs
 │   │   │   └── visuals.rs
-│   │   └── Cargo.toml
+│   │   ├── Cargo.toml
+│   │   └── README.md
 │   └── hdim-tui/
 │       ├── src/
 │       │   ├── components/
@@ -85,7 +86,9 @@ hdim/
 │       │   ├── events.rs
 │       │   ├── main.rs
 │       │   └── ui.rs
-│       └── Cargo.toml
+│       ├── Cargo.toml
+│       └── README.md
+├── CONTRIBUTING.md
 ├── Cargo.lock
 ├── Cargo.toml
 ├── GEMINI.md
