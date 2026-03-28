@@ -1,7 +1,14 @@
 [package]
 name = "hdim-tui"
-version = "0.1.0"
-edition = "2024"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+description = "The main TUI application for hdim."
+repository.workspace = true
+license.workspace = true
+keywords.workspace = true
+categories.workspace = true
+readme = "README.md"
 
 [dependencies]
 hdim-core = { path = "../hdim-core", features = ["exif"] }
