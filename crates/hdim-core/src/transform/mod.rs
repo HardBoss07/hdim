@@ -55,10 +55,10 @@ pub fn apply_transform(image: &DynamicImage, transform: &TransformState) -> Dyna
 }
 
 pub fn calculate_absolute_crop(value_str: &str, total: u32) -> u32 {
-    if value_str.ends_with('%') {
-        if let Ok(percent) = value_str[..value_str.len() - 1].parse::<f32>() {
-            return ((percent / 100.0) * total as f32).round() as u32;
-        }
+    if let Some(stripped) = value_str.strip_suffix('%')
+        && let Ok(percent) = stripped.parse::<f32>()
+    {
+        return ((percent / 100.0) * total as f32).round() as u32;
     }
     value_str.parse::<u32>().unwrap_or(0)
 }

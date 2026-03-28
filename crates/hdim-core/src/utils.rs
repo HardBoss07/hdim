@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 pub fn file_name_from_path(path: &Path) -> Option<String> {
     path.file_name()
@@ -6,6 +6,6 @@ pub fn file_name_from_path(path: &Path) -> Option<String> {
         .map(|s| s.to_string())
 }
 
-pub fn file_name_from_path_buf(path: &PathBuf) -> Option<String> {
-    file_name_from_path(path.as_path())
+pub fn file_name_from_path_buf(path: &Path) -> Option<String> {
+    file_name_from_path(path)
 }

@@ -1,4 +1,3 @@
-#![cfg(feature = "exif")]
 use super::util::{get_rational_from_exif, get_rational_vec_from_exif};
 use exif::{Exif, In, Tag};
 
@@ -23,7 +22,7 @@ pub fn get_gps_exif(exif: &Exif) -> Option<GpsExif> {
         altitude: get_rational_from_exif(exif, Tag::GPSAltitude, In::PRIMARY),
         timestamp: get_rational_vec_from_exif(exif, Tag::GPSTimeStamp, In::PRIMARY).map(|values| {
             (
-                values.get(0).map_or(0, |&second| second as u8),
+                values.first().map_or(0, |&second| second as u8),
                 values.get(1).map_or(0, |&second| second as u8),
                 values.get(2).map_or(0, |&second| second as u8),
             )

@@ -13,7 +13,7 @@ pub enum Tool {
 }
 
 /// Represents the state of the transform tool operation.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Default)]
 pub struct TransformState {
     /// Pixels to remove from the left edge.
     pub left: u32,
@@ -29,18 +29,4 @@ pub struct TransformState {
     pub flip_horizontal: bool,
     /// Whether the image is flipped vertically.
     pub flip_vertical: bool,
-}
-
-impl Default for TransformState {
-    fn default() -> Self {
-        Self {
-            left: 0,
-            right: 0,
-            top: 0,
-            bottom: 0,
-            rotation: 0,
-            flip_horizontal: false,
-            flip_vertical: false,
-        }
-    }
 }

@@ -26,10 +26,10 @@ pub fn handle_events(app: &mut App) -> Result<bool> {
     if event::poll(Duration::from_millis(16))? {
         let mut key_events = Vec::new();
         while event::poll(Duration::from_millis(0))? {
-            if let Event::Key(key) = event::read()? {
-                if key.kind == KeyEventKind::Press {
-                    key_events.push(key);
-                }
+            if let Event::Key(key) = event::read()?
+                && key.kind == KeyEventKind::Press
+            {
+                key_events.push(key);
             }
         }
 
@@ -128,16 +128,15 @@ fn handle_key_press(app: &mut App, key: KeyEvent) {
         } else if key
             .modifiers
             .contains(KeyModifiers::CONTROL | KeyModifiers::SHIFT)
+            && (key.code == KeyCode::Char('Z') || key.code == KeyCode::Char('z'))
         {
-            if key.code == KeyCode::Char('Z') || key.code == KeyCode::Char('z') {
-                if app.hdim_image.redo() {
-                    let new_adjustments = app.hdim_image.adjustments;
-                    app.adjustment_panel
-                        .update_sliders_from_adjustments(new_adjustments);
-                    app.update_adjustments();
-                }
-                return;
+            if app.hdim_image.redo() {
+                let new_adjustments = app.hdim_image.adjustments;
+                app.adjustment_panel
+                    .update_sliders_from_adjustments(new_adjustments);
+                app.update_adjustments();
             }
+            return;
         }
     }
 
@@ -366,39 +365,37 @@ fn handle_key_press(app: &mut App, key: KeyEvent) {
             }
             _ => {}
         },
-        AppMode::Normal => match key.code {
-            _ => {
-                if let Some(Tool::Transform) = app.selected_tool {
-                    handle_transform_events(key, app);
-                } else {
-                    match app.active_widget {
-                        ActiveWidget::Main => match key.code {
-                            KeyCode::Up => app.scroll(0, -pan_amount_pixels),
-                            KeyCode::Down => app.scroll(0, pan_amount_pixels),
-                            KeyCode::Left => app.scroll(-pan_amount_pixels, 0),
-                            KeyCode::Right => app.scroll(pan_amount_pixels, 0),
-                            KeyCode::PageUp => app.zoom(1.0 / ZOOM_FACTOR),
-                            KeyCode::PageDown => app.zoom(ZOOM_FACTOR),
-                            _ => {}
-                        },
-                        ActiveWidget::Adjustments => {
-                            if let Some(change) = app.adjustment_panel.handle_event(key) {
-                                match change {
-                                    AdjustmentsChange::Updated => {
-                                        app.update_adjustments();
-                                        app.hdim_image.record_state();
-                                    }
-                                    AdjustmentsChange::EnterPressed => {
-                                        app.mode = AppMode::EditingAdjustmentValue;
-                                        app.adjustment_input.clear();
-                                    }
+        AppMode::Normal => {
+            if let Some(Tool::Transform) = app.selected_tool {
+                handle_transform_events(key, app);
+            } else {
+                match app.active_widget {
+                    ActiveWidget::Main => match key.code {
+                        KeyCode::Up => app.scroll(0, -pan_amount_pixels),
+                        KeyCode::Down => app.scroll(0, pan_amount_pixels),
+                        KeyCode::Left => app.scroll(-pan_amount_pixels, 0),
+                        KeyCode::Right => app.scroll(pan_amount_pixels, 0),
+                        KeyCode::PageUp => app.zoom(1.0 / ZOOM_FACTOR),
+                        KeyCode::PageDown => app.zoom(ZOOM_FACTOR),
+                        _ => {}
+                    },
+                    ActiveWidget::Adjustments => {
+                        if let Some(change) = app.adjustment_panel.handle_event(key) {
+                            match change {
+                                AdjustmentsChange::Updated => {
+                                    app.update_adjustments();
+                                    app.hdim_image.record_state();
+                                }
+                                AdjustmentsChange::EnterPressed => {
+                                    app.mode = AppMode::EditingAdjustmentValue;
+                                    app.adjustment_input.clear();
                                 }
                             }
                         }
-                        _ => {}
                     }
+                    _ => {}
                 }
             }
-        },
+        }
     }
 }

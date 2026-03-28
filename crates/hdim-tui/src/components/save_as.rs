@@ -16,7 +16,7 @@ pub enum ImageFormat {
 }
 
 impl ImageFormat {
-    pub fn extension(&self) -> &str {
+    pub fn extension(self) -> &'static str {
         match self {
             ImageFormat::Png => "png",
             ImageFormat::Jpeg => "jpeg",
@@ -25,7 +25,7 @@ impl ImageFormat {
         }
     }
 
-    pub fn to_image_format(&self) -> image::ImageFormat {
+    pub fn to_image_format(self) -> image::ImageFormat {
         match self {
             ImageFormat::Png => image::ImageFormat::Png,
             ImageFormat::Jpeg => image::ImageFormat::Jpeg,

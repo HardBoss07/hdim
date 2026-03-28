@@ -18,19 +18,19 @@ pub fn get_exif_bytes_for_save(path: &Path, strip: bool) -> Result<Option<Vec<u8
     let bytes = std::fs::read(path)?;
 
     // Try to extract EXIF from JPEG
-    if let Ok(jpeg) = img_parts::jpeg::Jpeg::from_bytes(bytes.clone().into()) {
-        if let Some(exif) = jpeg.exif() {
-            let exif_vec: Vec<u8> = exif.to_vec();
-            return Ok(Some(exif_vec));
-        }
+    if let Ok(jpeg) = img_parts::jpeg::Jpeg::from_bytes(bytes.clone().into())
+        && let Some(exif) = jpeg.exif()
+    {
+        let exif_vec: Vec<u8> = exif.to_vec();
+        return Ok(Some(exif_vec));
     }
 
     // Try to extract EXIF from PNG
-    if let Ok(png) = img_parts::png::Png::from_bytes(bytes.into()) {
-        if let Some(exif) = png.exif() {
-            let exif_vec: Vec<u8> = exif.to_vec();
-            return Ok(Some(exif_vec));
-        }
+    if let Ok(png) = img_parts::png::Png::from_bytes(bytes.into())
+        && let Some(exif) = png.exif()
+    {
+        let exif_vec: Vec<u8> = exif.to_vec();
+        return Ok(Some(exif_vec));
     }
 
     Ok(None)

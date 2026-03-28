@@ -1,10 +1,9 @@
-#![cfg(feature = "exif")]
 use exif::{Exif, Field, In, Tag, Value};
 
 pub fn get_ascii(field: Option<&Field>) -> Option<String> {
     match &field?.value {
         Value::Ascii(values) => values
-            .get(0)
+            .first()
             .and_then(|bytes| String::from_utf8(bytes.clone()).ok()),
         _ => None,
     }
@@ -17,7 +16,7 @@ pub fn get_ascii_from_exif(exif: &Exif, tag: Tag, image_file_directory: In) -> O
 
 pub fn get_rational(field: Option<&Field>) -> Option<f64> {
     match &field?.value {
-        Value::Rational(values) => values.get(0).map(|rational| rational.to_f64()),
+        Value::Rational(values) => values.first().map(|rational| rational.to_f64()),
         _ => None,
     }
 }
@@ -50,5 +49,5 @@ pub fn get_u16_from_exif(exif: &Exif, tag: Tag, image_file_directory: In) -> Opt
 
 pub fn get_u32_from_exif(exif: &Exif, tag: Tag, image_file_directory: In) -> Option<u32> {
     exif.get_field(tag, image_file_directory)
-        .and_then(|field| field.value.get_uint(0).map(|value| value as u32))
+        .and_then(|field| field.value.get_uint(0))
 }

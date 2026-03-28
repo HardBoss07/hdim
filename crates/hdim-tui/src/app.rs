@@ -102,8 +102,6 @@ pub struct App {
     pub transform_input: String,
     /// Buffer for manual adjustment value input.
     pub adjustment_input: String,
-    /// Parsed EXIF metadata, if available.
-    pub exif_data: Option<ExifData>,
     /// The view component for displaying EXIF data.
     pub exif_view: Option<ExifView>,
     /// Flag to toggle the visibility of the right sidebar.
@@ -153,6 +151,7 @@ impl App {
         let adjustment_panel =
             AdjustmentPanel::new(hdim_image.adjustments, &localization.adjustments);
         let cached_image = hdim_image.apply_adjustments();
+        let last_saved_index = hdim_image.history.current_index();
 
         Ok(Self {
             hdim_image,
@@ -168,12 +167,11 @@ impl App {
             selected_transform_option_index: 0,
             transform_input: String::new(),
             adjustment_input: String::new(),
-            exif_data,
             exif_view,
-            show_right_toolbar: true,
+            show_right_toolbar: false,
             save_as: SaveAs::new(),
             adjustment_panel,
-            last_saved_index: 0,
+            last_saved_index,
             last_viewport_size: (0, 0),
             config,
             localization,

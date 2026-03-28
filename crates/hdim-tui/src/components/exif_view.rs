@@ -36,10 +36,10 @@ impl ExifView {
         items.push(
             ListItem::new(loc.general.clone()).style(Style::default().add_modifier(Modifier::BOLD)),
         );
-        if let Some(datetime) = &self.exif_data.datetime {
-            if let Some(original) = &datetime.original {
-                items.push(ListItem::new(format!("{}{}", loc.date_time, original)));
-            }
+        if let Some(datetime) = &self.exif_data.datetime
+            && let Some(original) = &datetime.original
+        {
+            items.push(ListItem::new(format!("{}{}", loc.date_time, original)));
         }
 
         // Camera Info
@@ -155,9 +155,5 @@ impl ExifView {
             None => 0,
         };
         self.state.select(Some(i));
-    }
-
-    pub fn unselect(&mut self) {
-        self.state.select(None);
     }
 }

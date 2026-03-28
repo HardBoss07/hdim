@@ -179,7 +179,7 @@ fn render_image_window(frame: &mut Frame, app: &mut App, area: Rect) {
         zoom: app.zoom,
         viewport_size: (area.width, area.height),
         has_unapplied_transform: app.has_unapplied_transform,
-        transform_state: app.transform_state.clone(),
+        transform_state: app.transform_state,
     };
 
     if app.cached_render.is_none() || Some(&current_state) != app.last_render_state.as_ref() {
@@ -269,46 +269,46 @@ fn render_crop_preview(frame: &mut Frame, app: &App, area: Rect, view: &View) {
         .add_modifier(Modifier::BOLD);
 
     // Left line
-    if ts.left > 0 {
-        if let Some(lx) = to_local_x(ts.left) {
-            for y in 0..area.height {
-                frame
-                    .buffer_mut()
-                    .set_string(area.x + lx, area.y + y, "│", style);
-            }
+    if ts.left > 0
+        && let Some(lx) = to_local_x(ts.left)
+    {
+        for y in 0..area.height {
+            frame
+                .buffer_mut()
+                .set_string(area.x + lx, area.y + y, "│", style);
         }
     }
 
     // Right line
-    if ts.right > 0 {
-        if let Some(rx) = to_local_x(img_w.saturating_sub(ts.right)) {
-            for y in 0..area.height {
-                frame
-                    .buffer_mut()
-                    .set_string(area.x + rx, area.y + y, "│", style);
-            }
+    if ts.right > 0
+        && let Some(rx) = to_local_x(img_w.saturating_sub(ts.right))
+    {
+        for y in 0..area.height {
+            frame
+                .buffer_mut()
+                .set_string(area.x + rx, area.y + y, "│", style);
         }
     }
 
     // Top line
-    if ts.top > 0 {
-        if let Some(ty) = to_local_y(ts.top) {
-            for x in 0..area.width {
-                frame
-                    .buffer_mut()
-                    .set_string(area.x + x, area.y + ty, "─", style);
-            }
+    if ts.top > 0
+        && let Some(ty) = to_local_y(ts.top)
+    {
+        for x in 0..area.width {
+            frame
+                .buffer_mut()
+                .set_string(area.x + x, area.y + ty, "─", style);
         }
     }
 
     // Bottom line
-    if ts.bottom > 0 {
-        if let Some(by) = to_local_y(img_h.saturating_sub(ts.bottom)) {
-            for x in 0..area.width {
-                frame
-                    .buffer_mut()
-                    .set_string(area.x + x, area.y + by, "─", style);
-            }
+    if ts.bottom > 0
+        && let Some(by) = to_local_y(img_h.saturating_sub(ts.bottom))
+    {
+        for x in 0..area.width {
+            frame
+                .buffer_mut()
+                .set_string(area.x + x, area.y + by, "─", style);
         }
     }
 }

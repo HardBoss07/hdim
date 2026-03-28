@@ -14,7 +14,7 @@ use palette::{FromColor, Lch, Srgb};
 ///
 /// * `image` - A reference to the input [DynamicImage].
 /// * `value` - The warmth value, typically between -100.0 and 100.0.
-///             The value is mapped from -100..100 to -40..40 degrees of hue shift.
+///   The value is mapped from -100..100 to -40..40 degrees of hue shift.
 ///
 /// # Returns
 ///
@@ -41,7 +41,7 @@ pub fn apply_warmth(image: &DynamicImage, value: f32) -> DynamicImage {
         );
 
         let mut lch: Lch = Lch::from_color(srgb);
-        lch.hue = lch.hue + factor;
+        lch.hue += factor;
 
         let new_srgb = Srgb::from_color(lch);
 

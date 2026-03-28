@@ -8,7 +8,8 @@ fn run_snapshot_test_for_area_size(area_size: u32) {
     path.push("tests/images/WindowsXP.png");
 
     // 2. Load the image
-    let image = image::open(&path).expect(&format!("Could not find test image at {:?}", path));
+    let image =
+        image::open(&path).unwrap_or_else(|_| panic!("Could not find test image at {:?}", path));
 
     // 3. Define the View to replicate old `area_size` behavior
     let (image_width, image_height) = image.dimensions();

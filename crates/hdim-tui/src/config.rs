@@ -38,12 +38,11 @@ impl Default for Config {
 
 impl Config {
     pub fn load() -> Self {
-        if let Some(config_path) = Self::get_config_path() {
-            if let Ok(content) = fs::read_to_string(config_path) {
-                if let Ok(config) = toml::from_str(&content) {
-                    return config;
-                }
-            }
+        if let Some(config_path) = Self::get_config_path()
+            && let Ok(content) = fs::read_to_string(config_path)
+            && let Ok(config) = toml::from_str(&content)
+        {
+            return config;
         }
         Self::default()
     }
