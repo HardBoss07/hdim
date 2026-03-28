@@ -150,9 +150,9 @@ The workspace is defined in the root `Cargo.toml`.
 
 ### Phase 11: Performance & Memory Optimization
 
-- [ ] **hdim-tui**: Fix "sticky" inputs (dropping keystrokes) while explicitly keeping the existing time scheduler intact to preserve exact number typing.
-- [ ] **hdim-render**: Optimize rendering to only occur when a change happens, eliminating the slowdown caused by recalculating every adjustment every frame.
-- [ ] **hdim-tui & hdim-render**: Investigate and fix the continuous 1-2MB/s memory leak while idling on an image (evaluate if this is a ratatui/crossterm issue with PowerShell or an internal allocation loop).
+- [x] **hdim-tui**: Fix "sticky" inputs (dropping keystrokes) while explicitly keeping the existing time scheduler intact to preserve exact number typing.
+- [x] **hdim-render**: Optimize rendering to only occur when a change happens, eliminating the slowdown caused by recalculating every adjustment every frame.
+- [x] **hdim-tui & hdim-render**: Investigate and fix the continuous 1-2MB/s memory leak while idling on an image (evaluate if this is a ratatui/crossterm issue with PowerShell or an internal allocation loop).
 
 ## Tools (Translation & Reference)
 
