@@ -154,6 +154,13 @@ The workspace is defined in the root `Cargo.toml`.
 - [x] **hdim-render**: Optimize rendering to only occur when a change happens, eliminating the slowdown caused by recalculating every adjustment every frame.
 - [x] **hdim-tui & hdim-render**: Investigate and fix the continuous 1-2MB/s memory leak while idling on an image (evaluate if this is a ratatui/crossterm issue with PowerShell or an internal allocation loop).
 
+### Phase 12: Project Finalization (AI-Optimized)
+
+- [x] **Documentation**: Create `CONTRIBUTING.md` with formatting, structural update, and coding guidelines.
+- [x] **Code Quality**: Resolve all compiler and Clippy warnings across the entire codebase.
+- [x] **Manifests**: Update all `Cargo.toml` files with full package metadata (description, repository, license, keywords, categories, readme).
+- [x] **End-User Docs**: Overhaul `README.md` to focus on project capabilities, installation, and usage, moving developer instructions to `CONTRIBUTING.md`.
+
 ## Tools (Translation & Reference)
 
 The following suite of tools—inspired by standard mobile editors—must be implemented within the `hdim-core` manipulation logic and exposed via `hdim-tui` sliders:
