@@ -11,9 +11,9 @@ categories.workspace = true
 readme = "README.md"
 
 [dependencies]
-hdim-core = { path = "../hdim-core", features = ["exif"] }
-hdim-render = { path = "../hdim-render" }
-ratatui.workspace = true
+hdim-core = { workspace = true, features = ["exif"] }
+hdim-render = { workspace = true }
+ratatui = { workspace = true }
 crossterm = { workspace = true }
 anyhow = { workspace = true }
 image = { workspace = true }

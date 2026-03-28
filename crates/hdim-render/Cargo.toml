@@ -11,10 +11,10 @@ categories.workspace = true
 readme = "README.md"
 
 [dependencies]
-hdim-core = { path = "../hdim-core" }
+hdim-core = { workspace = true }
 image = { workspace = true }
 crossterm = { workspace = true }
 anyhow = { workspace = true }
 
 [dev-dependencies]
-insta = { workspace = true } # Snapshot testing
+insta = { workspace = true }
