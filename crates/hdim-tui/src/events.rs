@@ -10,31 +10,34 @@ use hdim_core::state::Tool;
 use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
-fn drain_event_queue_keeping_last_key() -> Result<Option<KeyEvent>> {
-    let mut last_key_event = None;
-    while event::poll(Duration::from_millis(0))? {
-        if let Event::Key(key) = event::read()? {
-            if key.kind == KeyEventKind::Press {
-                last_key_event = Some(key);
-            }
-        }
-    }
-    Ok(last_key_event)
-}
-
-fn drain_event_queue() -> Result<()> {
-    while event::poll(Duration::from_millis(0))? {
-        let _ = event::read();
-    }
-    Ok(())
+fn is_continuous_event(key: &KeyEvent) -> bool {
+    matches!(
+        key.code,
+        KeyCode::Up
+            | KeyCode::Down
+            | KeyCode::Left
+            | KeyCode::Right
+            | KeyCode::PageUp
+            | KeyCode::PageDown
+    )
 }
 
 pub fn handle_events(app: &mut App) -> Result<bool> {
     if event::poll(Duration::from_millis(16))? {
-        if app.last_input_time.elapsed() >= app.input_delay {
-            let last_key_event = drain_event_queue_keeping_last_key()?;
+        let mut key_events = Vec::new();
+        while event::poll(Duration::from_millis(0))? {
+            if let Event::Key(key) = event::read()? {
+                if key.kind == KeyEventKind::Press {
+                    key_events.push(key);
+                }
+            }
+        }
 
-            if let Some(key) = last_key_event {
+        for key in key_events {
+            let is_continuous = is_continuous_event(&key);
+            let elapsed = app.last_input_time.elapsed();
+
+            if !is_continuous || elapsed >= app.input_delay {
                 app.last_input_time = Instant::now();
 
                 // Priority handling for ConfirmQuit mode to avoid other handlers interfering
@@ -43,9 +46,9 @@ pub fn handle_events(app: &mut App) -> Result<bool> {
                         KeyCode::Char('y') | KeyCode::Enter => return Ok(true),
                         KeyCode::Char('n') | KeyCode::Esc => {
                             app.mode = AppMode::Normal;
-                            return Ok(false);
+                            continue;
                         }
-                        _ => return Ok(false),
+                        _ => continue,
                     }
                 }
 
@@ -58,13 +61,13 @@ pub fn handle_events(app: &mut App) -> Result<bool> {
                             app.active_widget = ActiveWidget::Main;
                             app.mode = AppMode::Normal;
                             app.show_right_toolbar = false;
-                            return Ok(false);
+                            continue;
                         }
                         KeyCode::Char('n') | KeyCode::Esc => {
                             app.mode = AppMode::Normal;
-                            return Ok(false);
+                            continue;
                         }
-                        _ => return Ok(false),
+                        _ => continue,
                     }
                 }
 
@@ -79,8 +82,6 @@ pub fn handle_events(app: &mut App) -> Result<bool> {
                     }
                 }
             }
-        } else {
-            drain_event_queue()?;
         }
     }
     Ok(false)
