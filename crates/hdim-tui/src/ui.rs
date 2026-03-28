@@ -4,7 +4,7 @@
 //! It decomposes the screen into atomic regions (header, sidebar, viewport, status bar)
 //! and delegates rendering to specialized helper functions.
 
-use crate::app::{ActiveWidget, App, AppMode};
+use crate::app::{ActiveWidget, App, AppMode, RenderState};
 use crate::components::transform::render_transform_options;
 use ansi_to_tui::IntoText;
 use hdim_core::state::Tool;
@@ -174,22 +174,47 @@ fn render_image_window(frame: &mut Frame, app: &mut App, area: Rect) {
         target_height: area.height as u32,
     };
 
-    let preview_image = if app.has_unapplied_transform {
-        hdim_core::transform::apply_transform(&app.cached_image, &app.transform_state)
-    } else {
-        app.cached_image.clone()
+    let current_state = RenderState {
+        source_pos: app.source_pos,
+        zoom: app.zoom,
+        viewport_size: (area.width, area.height),
+        has_unapplied_transform: app.has_unapplied_transform,
+        transform_state: app.transform_state.clone(),
     };
 
-    let image_text = match hdim_render::render(&preview_image, &view) {
-        Ok(ansi_string) => ansi_string.into_text().unwrap_or_default(),
-        Err(_) => app
-            .localization
-            .common
-            .error_rendering
-            .clone()
-            .into_text()
-            .unwrap(),
-    };
+    if app.cached_render.is_none() || Some(&current_state) != app.last_render_state.as_ref() {
+        let temp_image;
+        let preview_image = if app.has_unapplied_transform {
+            temp_image =
+                hdim_core::transform::apply_transform(&app.cached_image, &app.transform_state);
+            &temp_image
+        } else {
+            &app.cached_image
+        };
+
+        match hdim_render::render(preview_image, &view) {
+            Ok(ansi_string) => {
+                app.cached_render = Some(ansi_string.into_text().unwrap_or_default());
+                app.last_render_state = Some(current_state);
+            }
+            Err(_) => {
+                app.cached_render = Some(
+                    app.localization
+                        .common
+                        .error_rendering
+                        .clone()
+                        .into_text()
+                        .unwrap(),
+                );
+            }
+        };
+    }
+
+    let image_text = app
+        .cached_render
+        .as_ref()
+        .cloned()
+        .unwrap_or_else(|| Text::from("Rendering..."));
 
     let block = Block::default()
         .style(app.styles.base)

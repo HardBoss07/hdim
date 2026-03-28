@@ -56,6 +56,18 @@ pub enum AppMode {
     Settings,
 }
 
+use ratatui::text::Text;
+
+/// Represents the state of the image rendering to detect changes.
+#[derive(Clone, PartialEq, Debug)]
+pub struct RenderState {
+    pub source_pos: (u32, u32),
+    pub zoom: f32,
+    pub viewport_size: (u16, u16),
+    pub has_unapplied_transform: bool,
+    pub transform_state: TransformState,
+}
+
 /// The global application state.
 ///
 /// `App` orchestrates the interaction between the core image logic ([HdimImage])
@@ -116,6 +128,10 @@ pub struct App {
     pub styles: ThemeStyles,
     /// Whether there are transform changes that haven't been applied yet.
     pub has_unapplied_transform: bool,
+    /// Cached render output to avoid redundant calculations.
+    pub cached_render: Option<Text<'static>>,
+    /// State used for the last successful render.
+    pub last_render_state: Option<RenderState>,
 }
 
 impl App {
@@ -165,6 +181,8 @@ impl App {
             palette,
             styles,
             has_unapplied_transform: false,
+            cached_render: None,
+            last_render_state: None,
         })
     }
 
@@ -235,6 +253,7 @@ impl App {
     pub fn update_adjustments(&mut self) {
         self.hdim_image.adjustments = self.adjustment_panel.get_adjustments();
         self.cached_image = self.hdim_image.apply_adjustments();
+        self.cached_render = None;
     }
 
     /// Calculates the source viewport dimensions based on the target terminal size and zoom.
