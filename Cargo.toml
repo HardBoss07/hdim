@@ -38,7 +38,7 @@ repository = "https://github.com/HardBoss07/hdim"
 license = "GPL-3.0"
 # Refined slugs based on crates.io categories
 keywords = ["image", "tui", "editor", "terminal", "graphics"]
-categories = ["command-line-utilities", "multimedia::graphics"]
+categories = ["command-line-utilities", "multimedia::images"]
 readme = "README.md"
 
 [workspace.dependencies]
