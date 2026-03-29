@@ -8,11 +8,11 @@
 - **Non-Destructive Editing:** Full Undo/Redo history stack for all your adjustments.
 - **Transform Tools:** Rotate, flip, and crop images (supporting both absolute pixels and relative percentages).
 - **Advanced Adjustments:** Fine-tune your images with sliders for:
-    - Saturation & Vibrance
-    - Exposure, Brightness & Contrast
-    - Warmth & Hue
-    - Fade (Matte effect)
-    - Film Grain & RGB Noise
+  - Saturation & Vibrance
+  - Exposure, Brightness & Contrast
+  - Warmth & Hue
+  - Fade (Matte effect)
+  - Film Grain & RGB Noise
 - **Metadata Viewer:** Comprehensive EXIF data display.
 - **Save & Export:** Save your changes to various formats (PNG, JPEG, GIF, BMP) with optional EXIF stripping for privacy.
 - **Localization:** Supports both English and German languages.
@@ -21,6 +21,7 @@
 ## Requirements
 
 To use HDIM, your terminal must support **TrueColor (24-bit)**. Verified terminals include:
+
 - VS Code Integrated Terminal
 - Windows Terminal (PowerShell/CMD)
 - iTerm2 / Apple Terminal
@@ -29,12 +30,19 @@ To use HDIM, your terminal must support **TrueColor (24-bit)**. Verified termina
 ## Installation
 
 ```bash
-# Clone the repository
-git clone https://github.com/mttvll/hdim
+# Installing directly from crates.io
+cargo install hdim
+```
+
+## Compile from Source
+
+```bash
+# Clone the Repository
+git clone https://github.com/HardBoss07/hdim
 cd hdim
 
-# Install the TUI application
-cargo install --path crates/hdim-tui
+# Building with release Profile
+cargo build --release
 ```
 
 ## Quick Start
