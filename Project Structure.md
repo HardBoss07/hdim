@@ -84,10 +84,13 @@ hdim/
 │       │   ├── app.rs
 │       │   ├── config.rs
 │       │   ├── events.rs
+│       │   ├── lib.rs
 │       │   ├── main.rs
 │       │   └── ui.rs
 │       ├── Cargo.toml
 │       └── README.md
+├── src/
+│   └── main.rs
 ├── CONTRIBUTING.md
 ├── Cargo.lock
 ├── Cargo.toml

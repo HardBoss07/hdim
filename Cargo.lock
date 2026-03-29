@@ -851,6 +851,10 @@ dependencies = [
 [[package]]
 name = "hdim"
 version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "hdim-tui",
+]
 
 [[package]]
 name = "hdim-core"

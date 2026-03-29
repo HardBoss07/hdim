@@ -18,6 +18,10 @@ keywords.workspace = true
 categories.workspace = true
 readme = "README.md"
 
+[dependencies]
+hdim-tui = { workspace = true }
+anyhow = { workspace = true }
+
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
@@ -34,6 +38,7 @@ readme = "README.md"
 # Internal Workspace Crates
 hdim-core = { path = "crates/hdim-core", version = "0.1.0" }
 hdim-render = { path = "crates/hdim-render", version = "0.1.0" }
+hdim-tui = { path = "crates/hdim-tui", version = "0.1.0" }
 
 # Graphics & Math
 image = "0.25"
