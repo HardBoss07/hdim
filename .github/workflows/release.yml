@@ -1,25 +1,24 @@
 name: Release Builds
 
-# This workflow triggers whenever you push a tag like "v0.1.0"
 on:
-  push:
-    tags:
-      - "v[0-9]+.[0-9]+.[0-9]+*"
+  release:
+    types: [published]
 
 jobs:
   build-and-upload:
     name: Build for ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
     strategy:
-      # This matrix runs the job twice: once on Linux, once on Windows
       matrix:
         include:
           - os: ubuntu-latest
             bin_name: hdim
-            asset_name: hdim-${{ github.ref_name }}-linux-x86_64.tar.gz
+            asset_name: hdim-linux-x86_64.tar.gz
           - os: windows-latest
             bin_name: hdim.exe
-            asset_name: hdim-${{ github.ref_name }}-windows-x86_64.zip
+            asset_name: hdim-windows-x86_64.zip
 
     steps:
       - name: Checkout Repository
@@ -35,29 +34,19 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           mkdir dist
-          # Copy only the essentials
           cp target/release/${{ matrix.bin_name }} dist/
-          cp README.md dist/
-          cp LICENSE dist/
-          # Create a compressed tarball
-          cd dist
-          tar -czvf ../${{ matrix.asset_name }} *
+          cp README.md LICENSE dist/
+          tar -czvf ${{ matrix.asset_name }} -C dist .
 
       - name: Package Release (Windows)
         if: matrix.os == 'windows-latest'
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path dist
-          # Copy only the essentials
-          Copy-Item -Path target\release\${{ matrix.bin_name }} -Destination dist\
-          Copy-Item -Path README.md -Destination dist\
-          Copy-Item -Path LICENSE -Destination dist\
-          # Create a zip file
+          Copy-Item target\release\${{ matrix.bin_name }}, README.md, LICENSE -Destination dist\
           Compress-Archive -Path dist\* -DestinationPath ${{ matrix.asset_name }}
 
-      - name: Upload to GitHub Release
-        # This action creates the release page and attaches your clean bundles
+      - name: Upload Assets to Release
         uses: softprops/action-gh-release@v2
         with:
           files: ${{ matrix.asset_name }}
-          generate_release_notes: true
